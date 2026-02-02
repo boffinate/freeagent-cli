@@ -186,6 +186,8 @@ func invoiceList(c *cli.Context) error {
 		return nil
 	}
 
+	contactCache := map[string]string{}
+
 	for _, item := range list {
 		inv, ok := item.(map[string]any)
 		if !ok {
@@ -194,8 +196,17 @@ func invoiceList(c *cli.Context) error {
 		ref := inv["reference"]
 		status := inv["status"]
 		url := inv["url"]
+		contactDisplay := inv["contact"]
+		if contactURL, ok := inv["contact"].(string); ok && contactURL != "" {
+			if cached, ok := contactCache[contactURL]; ok {
+				contactDisplay = cached
+			} else if contactName, err := fetchContactName(client, contactURL); err == nil && contactName != "" {
+				contactDisplay = contactName
+				contactCache[contactURL] = contactName
+			}
+		}
 		if ref != nil || status != nil || url != nil {
-			fmt.Fprintf(os.Stdout, "%v\t%v\t%v\n", ref, status, url)
+			fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v\n", ref, status, contactDisplay, url)
 		}
 	}
 	return nil
