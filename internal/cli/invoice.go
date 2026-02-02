@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"text/tabwriter"
 	"time"
 
 	"freegant-cli/internal/config"
@@ -186,6 +187,9 @@ func invoiceList(c *cli.Context) error {
 		return nil
 	}
 
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(writer, "Reference\tStatus\tContact\tAmount\tURL")
+
 	contactCache := map[string]string{}
 
 	for _, item := range list {
@@ -209,12 +213,13 @@ func invoiceList(c *cli.Context) error {
 		}
 		if ref != nil || status != nil || url != nil {
 			if currency != nil && amount != nil {
-				fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v %v\t%v\n", ref, status, contactDisplay, currency, amount, url)
+				fmt.Fprintf(writer, "%v\t%v\t%v\t%v %v\t%v\n", ref, status, contactDisplay, currency, amount, url)
 			} else {
-				fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v\n", ref, status, contactDisplay, url)
+				fmt.Fprintf(writer, "%v\t%v\t%v\t%v\t%v\n", ref, status, contactDisplay, "-", url)
 			}
 		}
 	}
+	_ = writer.Flush()
 	return nil
 }
 
