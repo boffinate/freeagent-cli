@@ -196,6 +196,8 @@ func invoiceList(c *cli.Context) error {
 		ref := inv["reference"]
 		status := inv["status"]
 		url := inv["url"]
+		amount := inv["total_value"]
+		currency := inv["currency"]
 		contactDisplay := inv["contact"]
 		if contactURL, ok := inv["contact"].(string); ok && contactURL != "" {
 			if cached, ok := contactCache[contactURL]; ok {
@@ -206,7 +208,11 @@ func invoiceList(c *cli.Context) error {
 			}
 		}
 		if ref != nil || status != nil || url != nil {
-			fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v\n", ref, status, contactDisplay, url)
+			if currency != nil && amount != nil {
+				fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v %v\t%v\n", ref, status, contactDisplay, currency, amount, url)
+			} else {
+				fmt.Fprintf(os.Stdout, "%v\t%v\t%v\t%v\n", ref, status, contactDisplay, url)
+			}
 		}
 	}
 	return nil
