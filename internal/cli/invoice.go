@@ -33,6 +33,15 @@ func invoiceCommand() *cli.Command {
 				Action: invoiceList,
 			},
 			{
+				Name:  "get",
+				Usage: "Get a single invoice by ID or URL",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "id", Usage: "Invoice ID"},
+					&cli.StringFlag{Name: "url", Usage: "Invoice URL"},
+				},
+				Action: invoiceGet,
+			},
+			{
 				Name:  "create",
 				Usage: "Create a draft invoice",
 				Flags: []cli.Flag{
@@ -188,6 +197,65 @@ func invoiceList(c *cli.Context) error {
 			fmt.Fprintf(os.Stdout, "%v\t%v\t%v\n", ref, status, url)
 		}
 	}
+	return nil
+}
+
+func invoiceGet(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
+	if err != nil {
+		return err
+	}
+
+	cfg, _, err := loadConfig(rt)
+	if err != nil {
+		return err
+	}
+	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
+
+	client, _, err := newClient(context.Background(), rt, profile)
+	if err != nil {
+		return err
+	}
+
+	id := c.String("id")
+	urlValue := c.String("url")
+	if id == "" && urlValue == "" {
+		return fmt.Errorf("id or url required")
+	}
+
+	path := ""
+	if urlValue != "" {
+		path = urlValue
+	} else {
+		path = fmt.Sprintf("/invoices/%s", id)
+	}
+
+	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
+	if err != nil {
+		return err
+	}
+
+	if rt.JSONOutput {
+		return writeJSONOutput(resp)
+	}
+
+	var decoded map[string]any
+	if err := json.Unmarshal(resp, &decoded); err != nil {
+		return err
+	}
+	invoice, _ := decoded["invoice"].(map[string]any)
+	if invoice == nil {
+		fmt.Fprintln(os.Stdout, string(resp))
+		return nil
+	}
+
+	fmt.Fprintf(os.Stdout, "Reference: %v\n", invoice["reference"])
+	fmt.Fprintf(os.Stdout, "Status:    %v\n", invoice["status"])
+	fmt.Fprintf(os.Stdout, "URL:       %v\n", invoice["url"])
+	fmt.Fprintf(os.Stdout, "Contact:   %v\n", invoice["contact"])
+	fmt.Fprintf(os.Stdout, "Dated On:  %v\n", invoice["dated_on"])
+	fmt.Fprintf(os.Stdout, "Due On:    %v\n", invoice["due_on"])
+	fmt.Fprintf(os.Stdout, "Total:     %v %v\n", invoice["currency"], invoice["total_value"])
 	return nil
 }
 
