@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"freegant-cli/internal/config"
+	"freegant-cli/internal/freeagent"
 
 	"github.com/urfave/cli/v2"
 )
@@ -249,14 +250,46 @@ func invoiceGet(c *cli.Context) error {
 		return nil
 	}
 
+	contactDisplay := invoice["contact"]
+	if contactURL, ok := invoice["contact"].(string); ok && contactURL != "" {
+		if contactName, err := fetchContactName(client, contactURL); err == nil && contactName != "" {
+			contactDisplay = fmt.Sprintf("%s (%s)", contactName, contactURL)
+		}
+	}
+
 	fmt.Fprintf(os.Stdout, "Reference: %v\n", invoice["reference"])
 	fmt.Fprintf(os.Stdout, "Status:    %v\n", invoice["status"])
 	fmt.Fprintf(os.Stdout, "URL:       %v\n", invoice["url"])
-	fmt.Fprintf(os.Stdout, "Contact:   %v\n", invoice["contact"])
+	fmt.Fprintf(os.Stdout, "Contact:   %v\n", contactDisplay)
 	fmt.Fprintf(os.Stdout, "Dated On:  %v\n", invoice["dated_on"])
 	fmt.Fprintf(os.Stdout, "Due On:    %v\n", invoice["due_on"])
 	fmt.Fprintf(os.Stdout, "Total:     %v %v\n", invoice["currency"], invoice["total_value"])
 	return nil
+}
+
+func fetchContactName(client *freeagent.Client, contactURL string) (string, error) {
+	resp, _, _, err := client.Do(context.Background(), http.MethodGet, contactURL, nil, "")
+	if err != nil {
+		return "", err
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(resp, &decoded); err != nil {
+		return "", err
+	}
+	contact, _ := decoded["contact"].(map[string]any)
+	if contact == nil {
+		return "", nil
+	}
+	if name, ok := contact["organisation_name"].(string); ok && name != "" {
+		return name, nil
+	}
+	if name, ok := contact["display_name"].(string); ok && name != "" {
+		return name, nil
+	}
+	if name, ok := contact["name"].(string); ok && name != "" {
+		return name, nil
+	}
+	return "", nil
 }
 
 func buildInvoicePayload(c *cli.Context, baseURL string) (map[string]any, error) {
