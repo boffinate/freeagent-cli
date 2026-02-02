@@ -14,11 +14,11 @@ import (
 )
 
 func loadConfig(rt Runtime) (*config.Config, string, error) {
-	cfg, path, err := config.Load(rt.ConfigPath)
+	cfg, cfgPath, err := config.Load(rt.ConfigPath)
 	if err != nil {
 		return nil, "", err
 	}
-	return cfg, path, nil
+	return cfg, cfgPath, nil
 }
 
 func ensureProfile(cfg *config.Config, profileName string, rt Runtime, overrides config.Profile) config.Profile {
@@ -49,9 +49,9 @@ func ensureProfile(cfg *config.Config, profileName string, rt Runtime, overrides
 	return profile
 }
 
-func saveProfile(cfg *config.Config, profileName, path string, profile config.Profile) error {
+func saveProfile(cfg *config.Config, profileName, cfgPath string, profile config.Profile) error {
 	cfg.SetProfile(profileName, profile)
-	return cfg.Save(path)
+	return cfg.Save(cfgPath)
 }
 
 func newClient(ctx context.Context, rt Runtime, profile config.Profile) (*freeagent.Client, *storage.Store, error) {

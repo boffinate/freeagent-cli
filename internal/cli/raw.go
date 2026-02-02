@@ -10,7 +10,7 @@ import (
 
 	"freegant-cli/internal/config"
 
-	"github.com/urfave/cli/v3"
+	"github.com/urfave/cli/v2"
 )
 
 func rawCommand() *cli.Command {
@@ -26,8 +26,8 @@ func rawCommand() *cli.Command {
 	}
 }
 
-func rawAction(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func rawAction(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
@@ -38,23 +38,23 @@ func rawAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
 
-	client, _, err := newClient(ctx, rt, profile)
+	client, _, err := newClient(context.Background(), rt, profile)
 	if err != nil {
 		return err
 	}
 
-	path := cmd.String("path")
+	path := c.String("path")
 	if path == "" {
 		return fmt.Errorf("path is required")
 	}
 
-	method := cmd.String("method")
+	method := c.String("method")
 	if method == "" {
 		method = http.MethodGet
 	}
 
 	var body []byte
-	if bodyPath := cmd.String("body"); bodyPath != "" {
+	if bodyPath := c.String("body"); bodyPath != "" {
 		data, err := os.ReadFile(bodyPath)
 		if err != nil {
 			return err
@@ -64,9 +64,9 @@ func rawAction(ctx context.Context, cmd *cli.Command) error {
 
 	var resp []byte
 	if body != nil {
-		resp, _, _, err = client.Do(ctx, method, path, bytes.NewReader(body), "application/json")
+		resp, _, _, err = client.Do(context.Background(), method, path, bytes.NewReader(body), "application/json")
 	} else {
-		resp, _, _, err = client.Do(ctx, method, path, nil, "")
+		resp, _, _, err = client.Do(context.Background(), method, path, nil, "")
 	}
 	if err != nil {
 		return err

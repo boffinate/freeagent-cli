@@ -10,7 +10,7 @@ import (
 
 	"freegant-cli/internal/config"
 
-	"github.com/urfave/cli/v3"
+	"github.com/urfave/cli/v2"
 )
 
 func invoiceCommand() *cli.Command {
@@ -52,8 +52,8 @@ func invoiceCommand() *cli.Command {
 	}
 }
 
-func invoiceCreate(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func invoiceCreate(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
@@ -64,17 +64,17 @@ func invoiceCreate(ctx context.Context, cmd *cli.Command) error {
 	}
 	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
 
-	client, _, err := newClient(ctx, rt, profile)
+	client, _, err := newClient(context.Background(), rt, profile)
 	if err != nil {
 		return err
 	}
 
-	payload, err := buildInvoicePayload(cmd, profile.BaseURL)
+	payload, err := buildInvoicePayload(c, profile.BaseURL)
 	if err != nil {
 		return err
 	}
 
-	resp, _, _, err := client.DoJSON(ctx, http.MethodPost, "/invoices", payload)
+	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/invoices", payload)
 	if err != nil {
 		return err
 	}
@@ -96,11 +96,11 @@ func invoiceCreate(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func buildInvoicePayload(cmd *cli.Command, baseURL string) (map[string]any, error) {
+func buildInvoicePayload(c *cli.Context, baseURL string) (map[string]any, error) {
 	var invoice map[string]any
 	payload := map[string]any{}
 
-	if bodyPath := cmd.String("body"); bodyPath != "" {
+	if bodyPath := c.String("body"); bodyPath != "" {
 		data, err := os.ReadFile(bodyPath)
 		if err != nil {
 			return nil, err
@@ -121,7 +121,7 @@ func buildInvoicePayload(cmd *cli.Command, baseURL string) (map[string]any, erro
 		payload["invoice"] = invoice
 	}
 
-	if contact := cmd.String("contact"); contact != "" {
+	if contact := c.String("contact"); contact != "" {
 		resolved, err := normalizeResourceURL(baseURL, "contacts", contact)
 		if err != nil {
 			return nil, err
@@ -129,28 +129,28 @@ func buildInvoicePayload(cmd *cli.Command, baseURL string) (map[string]any, erro
 		invoice["contact"] = resolved
 	}
 
-	if ref := cmd.String("reference"); ref != "" {
+	if ref := c.String("reference"); ref != "" {
 		invoice["reference"] = ref
 	}
-	if currency := cmd.String("currency"); currency != "" {
+	if currency := c.String("currency"); currency != "" {
 		invoice["currency"] = currency
 	}
 
-	if date := cmd.String("date"); date != "" {
+	if date := c.String("date"); date != "" {
 		invoice["dated_on"] = date
 	} else if _, ok := invoice["dated_on"]; !ok {
 		invoice["dated_on"] = time.Now().Format("2006-01-02")
 	}
 
-	if due := cmd.String("due"); due != "" {
+	if due := c.String("due"); due != "" {
 		invoice["due_on"] = due
 	}
 
 	if _, ok := invoice["payment_terms_in_days"]; !ok {
-		invoice["payment_terms_in_days"] = cmd.Int("payment-terms-days")
+		invoice["payment_terms_in_days"] = c.Int("payment-terms-days")
 	}
 
-	if linesPath := cmd.String("lines"); linesPath != "" {
+	if linesPath := c.String("lines"); linesPath != "" {
 		data, err := os.ReadFile(linesPath)
 		if err != nil {
 			return nil, err
@@ -179,8 +179,8 @@ func buildInvoicePayload(cmd *cli.Command, baseURL string) (map[string]any, erro
 	return payload, nil
 }
 
-func invoiceSend(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func invoiceSend(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
@@ -191,13 +191,13 @@ func invoiceSend(ctx context.Context, cmd *cli.Command) error {
 	}
 	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
 
-	client, _, err := newClient(ctx, rt, profile)
+	client, _, err := newClient(context.Background(), rt, profile)
 	if err != nil {
 		return err
 	}
 
-	id := cmd.String("id")
-	urlValue := cmd.String("url")
+	id := c.String("id")
+	urlValue := c.String("url")
 	if id == "" && urlValue == "" {
 		return fmt.Errorf("id or url required")
 	}
@@ -209,7 +209,7 @@ func invoiceSend(ctx context.Context, cmd *cli.Command) error {
 		path = fmt.Sprintf("/invoices/%s", id)
 	}
 
-	if payloadPath := cmd.String("body"); payloadPath != "" {
+	if payloadPath := c.String("body"); payloadPath != "" {
 		data, err := os.ReadFile(payloadPath)
 		if err != nil {
 			return err
@@ -218,7 +218,7 @@ func invoiceSend(ctx context.Context, cmd *cli.Command) error {
 		if err := json.Unmarshal(data, &payload); err != nil {
 			return err
 		}
-		resp, _, _, err := client.DoJSON(ctx, http.MethodPost, path+"/send_email", payload)
+		resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, path+"/send_email", payload)
 		if err != nil {
 			return err
 		}
@@ -229,24 +229,24 @@ func invoiceSend(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	if to := cmd.String("email-to"); to != "" {
+	if to := c.String("email-to"); to != "" {
 		email := map[string]any{
 			"to": to,
 		}
-		if cc := cmd.String("cc"); cc != "" {
+		if cc := c.String("cc"); cc != "" {
 			email["cc"] = cc
 		}
-		if bcc := cmd.String("bcc"); bcc != "" {
+		if bcc := c.String("bcc"); bcc != "" {
 			email["bcc"] = bcc
 		}
-		if subject := cmd.String("subject"); subject != "" {
+		if subject := c.String("subject"); subject != "" {
 			email["subject"] = subject
 		}
-		if message := cmd.String("message"); message != "" {
+		if message := c.String("message"); message != "" {
 			email["body"] = message
 		}
 		payload := map[string]any{"invoice": map[string]any{"email": email}}
-		resp, _, _, err := client.DoJSON(ctx, http.MethodPost, path+"/send_email", payload)
+		resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, path+"/send_email", payload)
 		if err != nil {
 			return err
 		}
@@ -257,7 +257,7 @@ func invoiceSend(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	resp, _, _, err := client.Do(ctx, http.MethodPost, path+"/transitions/mark_as_sent", nil, "")
+	resp, _, _, err := client.Do(context.Background(), http.MethodPost, path+"/transitions/mark_as_sent", nil, "")
 	if err != nil {
 		return err
 	}

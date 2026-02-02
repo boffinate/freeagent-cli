@@ -17,7 +17,7 @@ import (
 	"freegant-cli/internal/config"
 	"freegant-cli/internal/storage"
 
-	"github.com/urfave/cli/v3"
+	"github.com/urfave/cli/v2"
 )
 
 const defaultRedirectURI = "http://127.0.0.1:8797/callback"
@@ -82,22 +82,22 @@ func authCommand() *cli.Command {
 	}
 }
 
-func authLogin(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func authLogin(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
 
-	cfg, path, err := loadConfig(rt)
+	cfg, cfgPath, err := loadConfig(rt)
 	if err != nil {
 		return err
 	}
 
 	overrides := config.Profile{
-		ClientID:     cmd.String("client-id"),
-		ClientSecret: cmd.String("client-secret"),
-		RedirectURI:  cmd.String("redirect"),
-		UserAgent:    cmd.String("user-agent"),
+		ClientID:     c.String("client-id"),
+		ClientSecret: c.String("client-secret"),
+		RedirectURI:  c.String("redirect"),
+		UserAgent:    c.String("user-agent"),
 	}
 
 	profile := ensureProfile(cfg, rt.Profile, rt, overrides)
@@ -105,7 +105,7 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 		profile.RedirectURI = defaultRedirectURI
 	}
 
-	if !cmd.Bool("manual") {
+	if !c.Bool("manual") {
 		if parsed, err := url.Parse(profile.RedirectURI); err != nil || parsed.Scheme != "http" {
 			return fmt.Errorf("redirect uri must be http for local callback (got %s)", profile.RedirectURI)
 		}
@@ -118,13 +118,13 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	if cmd.Bool("save") {
-		if err := saveProfile(cfg, rt.Profile, path, profile); err != nil {
+	if c.Bool("save") {
+		if err := saveProfile(cfg, rt.Profile, cfgPath, profile); err != nil {
 			return err
 		}
 	}
 
-	client, store, err := newClient(ctx, rt, profile)
+	client, store, err := newClient(context.Background(), rt, profile)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	var code string
-	if cmd.Bool("manual") {
+	if c.Bool("manual") {
 		fmt.Fprintf(os.Stdout, "Open this URL in your browser:\n%s\n\nPaste the code or redirected URL: ", authURL)
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
@@ -151,7 +151,7 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 
-	token, err := client.ExchangeCode(ctx, code)
+	token, err := client.ExchangeCode(context.Background(), code)
 	if err != nil {
 		return err
 	}
@@ -172,8 +172,8 @@ func authLogin(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func authStatus(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func authStatus(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
@@ -208,8 +208,8 @@ func authStatus(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func authRefresh(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func authRefresh(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func authRefresh(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	client, store, err := newClient(ctx, rt, profile)
+	client, store, err := newClient(context.Background(), rt, profile)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func authRefresh(ctx context.Context, cmd *cli.Command) error {
 		return exitf("refresh token missing for profile %s", rt.Profile)
 	}
 
-	refreshed, err := client.Refresh(ctx, stored.RefreshToken)
+	refreshed, err := client.Refresh(context.Background(), stored.RefreshToken)
 	if err != nil {
 		return err
 	}
@@ -260,8 +260,8 @@ func authRefresh(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func authLogout(ctx context.Context, cmd *cli.Command) error {
-	rt, err := runtimeFrom(cmd)
+func authLogout(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
 	if err != nil {
 		return err
 	}
