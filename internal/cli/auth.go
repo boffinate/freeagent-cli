@@ -28,6 +28,33 @@ func authCommand() *cli.Command {
 		Usage: "Authenticate with FreeAgent",
 		Subcommands: []*cli.Command{
 			{
+				Name:  "configure",
+				Usage: "Save OAuth app settings to config",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "redirect",
+						EnvVars: []string{"FREEGANT_REDIRECT_URI"},
+						Usage:   "Override redirect URI",
+					},
+					&cli.StringFlag{
+						Name:    "client-id",
+						EnvVars: []string{"FREEGANT_CLIENT_ID"},
+						Usage:   "OAuth client ID",
+					},
+					&cli.StringFlag{
+						Name:    "client-secret",
+						EnvVars: []string{"FREEGANT_CLIENT_SECRET"},
+						Usage:   "OAuth client secret",
+					},
+					&cli.StringFlag{
+						Name:    "user-agent",
+						EnvVars: []string{"FREEGANT_USER_AGENT"},
+						Usage:   "Custom User-Agent",
+					},
+				},
+				Action: authConfigure,
+			},
+			{
 				Name:  "login",
 				Usage: "Start OAuth flow",
 				Flags: []cli.Flag{
@@ -169,6 +196,50 @@ func authLogin(c *cli.Context) error {
 	}
 
 	fmt.Fprintf(os.Stdout, "Authenticated profile %s (expires %s)\n", rt.Profile, token.ExpiresAt.Format(time.RFC3339))
+	return nil
+}
+
+func authConfigure(c *cli.Context) error {
+	rt, err := runtimeFrom(c)
+	if err != nil {
+		return err
+	}
+
+	cfg, cfgPath, err := loadConfig(rt)
+	if err != nil {
+		return err
+	}
+
+	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{
+		ClientID:     c.String("client-id"),
+		ClientSecret: c.String("client-secret"),
+		RedirectURI:  c.String("redirect"),
+		UserAgent:    c.String("user-agent"),
+	})
+
+	if profile.RedirectURI == "" {
+		profile.RedirectURI = defaultRedirectURI
+	}
+
+	if err := require(profile.ClientID, "client-id"); err != nil {
+		return err
+	}
+	if err := require(profile.ClientSecret, "client-secret"); err != nil {
+		return err
+	}
+
+	if err := saveProfile(cfg, rt.Profile, cfgPath, profile); err != nil {
+		return err
+	}
+
+	if rt.JSONOutput {
+		return writeJSONOutput(mustMarshal(map[string]any{
+			"status":  "ok",
+			"profile": rt.Profile,
+		}))
+	}
+
+	fmt.Fprintf(os.Stdout, "Saved OAuth settings for profile %s\n", rt.Profile)
 	return nil
 }
 
