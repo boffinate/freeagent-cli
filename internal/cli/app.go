@@ -10,17 +10,17 @@ import (
 
 func NewApp() *cli.App {
 	app := &cli.App{
-		Name:  "freegant",
+		Name:  "freeagent",
 		Usage: "CLI for the FreeAgent API",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",
-				EnvVars: []string{"FREEGANT_CONFIG"},
+				EnvVars: []string{"FREEAGENT_CONFIG"},
 				Usage:   "Path to config file",
 			},
 			&cli.StringFlag{
 				Name:    "profile",
-				EnvVars: []string{"FREEGANT_PROFILE"},
+				EnvVars: []string{"FREEAGENT_PROFILE"},
 				Value:   "default",
 				Usage:   "Credential profile name",
 			},
@@ -30,7 +30,7 @@ func NewApp() *cli.App {
 			},
 			&cli.StringFlag{
 				Name:    "base-url",
-				EnvVars: []string{"FREEGANT_BASE_URL"},
+				EnvVars: []string{"FREEAGENT_BASE_URL"},
 				Usage:   "Override API base URL",
 			},
 			&cli.BoolFlag{

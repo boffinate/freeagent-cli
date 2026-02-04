@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"freegant-cli/internal/storage"
+	"freeagent-cli/internal/storage"
 )
 
 const (

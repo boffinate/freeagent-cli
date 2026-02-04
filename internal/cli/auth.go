@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"freegant-cli/internal/config"
-	"freegant-cli/internal/storage"
+	"freeagent-cli/internal/config"
+	"freeagent-cli/internal/storage"
 
 	"github.com/urfave/cli/v2"
 )
@@ -33,22 +33,22 @@ func authCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "redirect",
-						EnvVars: []string{"FREEGANT_REDIRECT_URI"},
+						EnvVars: []string{"FREEAGENT_REDIRECT_URI"},
 						Usage:   "Override redirect URI",
 					},
 					&cli.StringFlag{
 						Name:    "client-id",
-						EnvVars: []string{"FREEGANT_CLIENT_ID"},
+						EnvVars: []string{"FREEAGENT_CLIENT_ID"},
 						Usage:   "OAuth client ID",
 					},
 					&cli.StringFlag{
 						Name:    "client-secret",
-						EnvVars: []string{"FREEGANT_CLIENT_SECRET"},
+						EnvVars: []string{"FREEAGENT_CLIENT_SECRET"},
 						Usage:   "OAuth client secret",
 					},
 					&cli.StringFlag{
 						Name:    "user-agent",
-						EnvVars: []string{"FREEGANT_USER_AGENT"},
+						EnvVars: []string{"FREEAGENT_USER_AGENT"},
 						Usage:   "Custom User-Agent",
 					},
 				},
@@ -64,22 +64,22 @@ func authCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:    "redirect",
-						EnvVars: []string{"FREEGANT_REDIRECT_URI"},
+						EnvVars: []string{"FREEAGENT_REDIRECT_URI"},
 						Usage:   "Override redirect URI",
 					},
 					&cli.StringFlag{
 						Name:    "client-id",
-						EnvVars: []string{"FREEGANT_CLIENT_ID"},
+						EnvVars: []string{"FREEAGENT_CLIENT_ID"},
 						Usage:   "OAuth client ID",
 					},
 					&cli.StringFlag{
 						Name:    "client-secret",
-						EnvVars: []string{"FREEGANT_CLIENT_SECRET"},
+						EnvVars: []string{"FREEAGENT_CLIENT_SECRET"},
 						Usage:   "OAuth client secret",
 					},
 					&cli.StringFlag{
 						Name:    "user-agent",
-						EnvVars: []string{"FREEGANT_USER_AGENT"},
+						EnvVars: []string{"FREEAGENT_USER_AGENT"},
 						Usage:   "Custom User-Agent",
 					},
 					&cli.BoolFlag{

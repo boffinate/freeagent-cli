@@ -2,7 +2,7 @@
 .DS_Store
 
 # build outputs
-freegant
+freeagent
 
 # Go
 bin/

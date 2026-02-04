@@ -5,14 +5,14 @@ import (
 	"path/filepath"
 )
 
-const DefaultServiceName = "freegant"
+const DefaultServiceName = "freeagent"
 
 func DefaultFileDir() (string, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "freegant", "tokens"), nil
+	return filepath.Join(dir, "freeagent", "tokens"), nil
 }
 
 func NewDefaultStore() (*Store, error) {

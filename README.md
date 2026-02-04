@@ -1,4 +1,4 @@
-# freegant
+# freeagent
 
 A small CLI for the FreeAgent API, built in Go.
 
@@ -13,7 +13,7 @@ A small CLI for the FreeAgent API, built in Go.
 ## Install
 
 ```bash
-go build ./cmd/freegant
+go build ./cmd/freeagent
 ```
 
 ## Configure
@@ -23,7 +23,7 @@ Create a FreeAgent API application and note the client ID + secret.
 Save app credentials:
 
 ```bash
-./freegant auth configure \
+./freeagent auth configure \
   --client-id YOUR_ID \
   --client-secret YOUR_SECRET \
   --redirect http://127.0.0.1:8797/callback
@@ -32,9 +32,9 @@ Save app credentials:
 You can also use env vars:
 
 ```bash
-export FREEGANT_CLIENT_ID=...
-export FREEGANT_CLIENT_SECRET=...
-export FREEGANT_REDIRECT_URI=http://127.0.0.1:8797/callback
+export FREEAGENT_CLIENT_ID=...
+export FREEAGENT_CLIENT_SECRET=...
+export FREEAGENT_REDIRECT_URI=http://127.0.0.1:8797/callback
 ```
 
 ## Login
@@ -42,13 +42,13 @@ export FREEGANT_REDIRECT_URI=http://127.0.0.1:8797/callback
 Local callback (default):
 
 ```bash
-./freegant auth login
+./freeagent auth login
 ```
 
 Manual flow:
 
 ```bash
-./freegant auth login --manual
+./freeagent auth login --manual
 ```
 
 ## Usage
@@ -56,7 +56,7 @@ Manual flow:
 Create a draft invoice:
 
 ```bash
-./freegant invoices create \
+./freeagent invoices create \
   --contact CONTACT_ID \
   --reference INV-001 \
   --lines ./invoice-lines.json
@@ -65,25 +65,25 @@ Create a draft invoice:
 Send an invoice email:
 
 ```bash
-./freegant invoices send --id INVOICE_ID --email-to you@company.com
+./freeagent invoices send --id INVOICE_ID --email-to you@company.com
 ```
 
 Mark as sent (no email):
 
 ```bash
-./freegant invoices send --id INVOICE_ID
+./freeagent invoices send --id INVOICE_ID
 ```
 
 Break-glass request:
 
 ```bash
-./freegant raw --method GET --path /v2/invoices
+./freeagent raw --method GET --path /v2/invoices
 ```
 
 ## Files
 
-- Config: `~/.config/freegant/config.json`
-- Tokens (fallback): `~/.config/freegant/tokens/PROFILE.json`
+- Config: `~/.config/freeagent/config.json`
+- Tokens (fallback): `~/.config/freeagent/tokens/PROFILE.json`
 
 ## Notes
 

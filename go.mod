@@ -1,4 +1,4 @@
-module freegant-cli
+module freeagent-cli
 
 go 1.22
 
