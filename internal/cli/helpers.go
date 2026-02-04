@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"freegant-cli/internal/config"
-	"freegant-cli/internal/freeagent"
-	"freegant-cli/internal/storage"
+	"freeagent-cli/internal/config"
+	"freeagent-cli/internal/freeagent"
+	"freeagent-cli/internal/storage"
 )
 
 func loadConfig(rt Runtime) (*config.Config, string, error) {
@@ -44,7 +44,7 @@ func ensureProfile(cfg *config.Config, profileName string, rt Runtime, overrides
 		profile.BaseURL = rt.BaseURL
 	}
 	if profile.UserAgent == "" {
-		profile.UserAgent = "freegant-cli/0.1"
+		profile.UserAgent = "freeagent-cli/0.1"
 	}
 	return profile
 }

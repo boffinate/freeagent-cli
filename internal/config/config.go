@@ -25,7 +25,7 @@ func DefaultPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "freegant", "config.json"), nil
+	return filepath.Join(dir, "freeagent", "config.json"), nil
 }
 
 func Load(path string) (*Config, string, error) {

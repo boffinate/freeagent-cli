@@ -11,8 +11,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"freegant-cli/internal/config"
-	"freegant-cli/internal/freeagent"
+	"freeagent-cli/internal/config"
+	"freeagent-cli/internal/freeagent"
 
 	"github.com/urfave/cli/v2"
 )

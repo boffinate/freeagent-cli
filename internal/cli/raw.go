@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"freegant-cli/internal/config"
+	"freeagent-cli/internal/config"
 
 	"github.com/urfave/cli/v2"
 )

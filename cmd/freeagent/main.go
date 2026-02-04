@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"freegant-cli/internal/cli"
+	"freeagent-cli/internal/cli"
 )
 
 func main() {
