@@ -106,7 +106,7 @@ func invoiceCreate(c *cli.Context) error {
 		return err
 	}
 
-	payload, err := buildInvoicePayload(c, profile.BaseURL)
+	payload, err := buildInvoicePayload(c, client, profile.BaseURL)
 	if err != nil {
 		return err
 	}
@@ -416,7 +416,7 @@ func fetchContactName(client *freeagent.Client, contactURL string) (string, erro
 	return "", nil
 }
 
-func buildInvoicePayload(c *cli.Context, baseURL string) (map[string]any, error) {
+func buildInvoicePayload(c *cli.Context, client *freeagent.Client, baseURL string) (map[string]any, error) {
 	var invoice map[string]any
 	payload := map[string]any{}
 
@@ -442,7 +442,7 @@ func buildInvoicePayload(c *cli.Context, baseURL string) (map[string]any, error)
 	}
 
 	if contact := c.String("contact"); contact != "" {
-		resolved, err := normalizeResourceURL(baseURL, "contacts", contact)
+		resolved, err := resolveContactValue(c.Context, client, baseURL, contact)
 		if err != nil {
 			return nil, err
 		}

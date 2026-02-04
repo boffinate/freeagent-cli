@@ -62,6 +62,15 @@ Create a draft invoice:
   --lines ./invoice-lines.json
 ```
 
+You can also pass a contact name or email and the CLI will resolve it:
+
+```bash
+./freeagent invoices create \
+  --contact "Acme Ltd" \
+  --reference INV-002 \
+  --lines ./invoice-lines.json
+```
+
 Send an invoice email:
 
 ```bash
@@ -78,6 +87,15 @@ Break-glass request:
 
 ```bash
 ./freeagent raw --method GET --path /v2/invoices
+```
+
+Contacts:
+
+```bash
+./freeagent contacts list
+./freeagent contacts search --query "Acme"
+./freeagent contacts get --id CONTACT_ID
+./freeagent contacts create --organisation "Acme Ltd" --email accounts@acme.test
 ```
 
 ## Files
