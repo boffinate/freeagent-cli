@@ -41,6 +41,7 @@ func NewApp() *cli.App {
 		Before: initRuntime,
 		Commands: []*cli.Command{
 			authCommand(),
+			bankCommand(),
 			contactsCommand(),
 			invoiceCommand(),
 			rawCommand(),
