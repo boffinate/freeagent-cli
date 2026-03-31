@@ -13,6 +13,12 @@ A small CLI for the FreeAgent API, built in Go.
 ## Install
 
 ```bash
+go install github.com/anjor/freeagent-cli/cmd/freeagent@latest
+```
+
+Or build from source:
+
+```bash
 go build ./cmd/freeagent
 ```
 

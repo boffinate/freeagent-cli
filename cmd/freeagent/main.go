@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"freeagent-cli/internal/cli"
+	"github.com/anjor/freeagent-cli/internal/cli"
 )
 
 func main() {

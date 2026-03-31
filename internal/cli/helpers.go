@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"freeagent-cli/internal/config"
-	"freeagent-cli/internal/freeagent"
-	"freeagent-cli/internal/storage"
+	"github.com/anjor/freeagent-cli/internal/config"
+	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/anjor/freeagent-cli/internal/storage"
 )
 
 func loadConfig(rt Runtime) (*config.Config, string, error) {

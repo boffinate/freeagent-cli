@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"freeagent-cli/internal/config"
-	"freeagent-cli/internal/storage"
+	"github.com/anjor/freeagent-cli/internal/config"
+	"github.com/anjor/freeagent-cli/internal/storage"
 
 	"github.com/urfave/cli/v2"
 )
