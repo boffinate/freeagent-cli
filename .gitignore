@@ -1,11 +1,12 @@
 # macOS
 .DS_Store
 
-# build outputs
-freeagent
+# build outputs (root-only; the unanchored form also matches internal/freeagent/)
+/freeagent
+/freeagent-ro
 
 # Go
-bin/
+/bin/
 *.exe
 *.dll
 *.so
