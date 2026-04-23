@@ -1,0 +1,24 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build full binary
+        run: go build ./cmd/freeagent
+      - name: Build readonly binary
+        run: go build -tags readonly ./cmd/freeagent
+      - name: Default-build tests
+        run: go test ./...
+      - name: Readonly-build tests
+        run: go test -tags readonly ./...
+      - name: go vet
+        run: go vet ./...
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: govulncheck
+        run: govulncheck ./...
