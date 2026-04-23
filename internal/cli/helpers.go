@@ -2,9 +2,11 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -122,4 +124,67 @@ func require(value, name string) error {
 func writeJSONOutput(data []byte) error {
 	_, err := os.Stdout.Write(append(data, '\n'))
 	return err
+}
+
+// getAndDecode issues a GET and decodes the JSON body into *T. Returns both
+// the decoded value and the raw bytes so callers can choose JSON passthrough.
+func getAndDecode[T any](ctx context.Context, client *freeagent.Client, path string) (*T, []byte, error) {
+	resp, _, _, err := client.Do(ctx, http.MethodGet, path, nil, "")
+	if err != nil {
+		return nil, resp, err
+	}
+	var decoded T
+	if err := json.Unmarshal(resp, &decoded); err != nil {
+		return nil, resp, err
+	}
+	return &decoded, resp, nil
+}
+
+// buildQueryParams URL-encodes a set of query parameters, skipping blanks
+// after trimming. Values and keys are passed through verbatim otherwise.
+func buildQueryParams(params map[string]string) string {
+	if len(params) == 0 {
+		return ""
+	}
+	q := url.Values{}
+	for k, v := range params {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		q.Set(k, v)
+	}
+	return q.Encode()
+}
+
+// appendQuery attaches an already-encoded query string to path.
+func appendQuery(path, encoded string) string {
+	if encoded == "" {
+		return path
+	}
+	if strings.Contains(path, "?") {
+		return path + "&" + encoded
+	}
+	return path + "?" + encoded
+}
+
+// printOrJSON writes raw to stdout when rt.JSONOutput is set; otherwise calls
+// fallback to render whatever formatted output the caller prefers.
+func printOrJSON(rt Runtime, raw []byte, fallback func() error) error {
+	if rt.JSONOutput {
+		return writeJSONOutput(raw)
+	}
+	return fallback()
+}
+
+// requireIDOrURL resolves a flag pair (id, url) against a resource collection
+// for commands that accept either. Returns the absolute request path.
+func requireIDOrURL(baseURL, resource, id, urlValue string) (string, error) {
+	if urlValue != "" {
+		return urlValue, nil
+	}
+	if id != "" {
+		return normalizeResourceURL(baseURL, resource, id)
+	}
+	return "", fmt.Errorf("id or url required")
 }

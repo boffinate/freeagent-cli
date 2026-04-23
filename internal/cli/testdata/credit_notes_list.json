@@ -1,0 +1,13 @@
+{
+  "credit_notes": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/credit_notes/300",
+      "reference": "CN-001",
+      "status": "Open",
+      "dated_on": "2026-02-10",
+      "currency": "GBP",
+      "total_value": "120.00",
+      "contact": "https://api.sandbox.freeagent.com/v2/contacts/1"
+    }
+  ]
+}

@@ -1,15 +1,11 @@
-//go:build !readonly
-
 package cli
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
-	"strings"
+	"text/tabwriter"
 
 	"github.com/anjor/freeagent-cli/internal/config"
 	"github.com/anjor/freeagent-cli/internal/freeagent"
@@ -18,288 +14,317 @@ import (
 )
 
 func bankCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "bank",
-		Usage: "Work with bank transactions",
+		Usage: "Work with bank accounts and transactions",
+		Subcommands: []*cli.Command{
+			bankAccountsCmd(),
+			bankTransactionsCmd(),
+			bankExplanationsCmd(),
+		},
+	}
+	cmd.Subcommands = append(cmd.Subcommands, bankWriteSubcommands()...)
+	return cmd
+}
+
+func bankAccountsCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "accounts",
+		Usage: "Bank accounts",
 		Subcommands: []*cli.Command{
 			{
-				Name:  "approve",
-				Usage: "Approve bank transactions in bulk",
+				Name:   "list",
+				Usage:  "List bank accounts",
+				Flags:  []cli.Flag{&cli.StringFlag{Name: "view", Usage: "API view filter"}},
+				Action: bankAccountsList,
+			},
+			{
+				Name:  "get",
+				Usage: "Get a bank account by ID or URL",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required for date filters)"},
-					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
-					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
-					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-					&cli.StringFlag{Name: "ids", Usage: "Comma list or file path with IDs/URLs"},
-					&cli.StringFlag{Name: "ids-type", Value: "transaction", Usage: "ids type: transaction or explanation"},
+					&cli.StringFlag{Name: "id", Usage: "Bank account ID"},
+					&cli.StringFlag{Name: "url", Usage: "Bank account URL"},
 				},
-				Action: bankApprove,
+				Action: bankAccountsGet,
 			},
 		},
 	}
 }
 
-func bankApprove(c *cli.Context) error {
-	rt, err := runtimeFrom(c)
-	if err != nil {
-		return err
-	}
-
-	cfg, _, err := loadConfig(rt)
-	if err != nil {
-		return err
-	}
-	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
-
-	client, _, err := newClient(context.Background(), rt, profile)
-	if err != nil {
-		return err
-	}
-
-	idsInput := strings.TrimSpace(c.String("ids"))
-	idsType := strings.TrimSpace(strings.ToLower(c.String("ids-type")))
-	if idsType == "" {
-		idsType = "transaction"
-	}
-	if idsType != "transaction" && idsType != "explanation" {
-		return fmt.Errorf("ids-type must be transaction or explanation")
-	}
-
-	var explanations []string
-	if idsInput != "" {
-		ids, err := parseIDList(idsInput)
-		if err != nil {
-			return err
-		}
-		if len(ids) == 0 {
-			return fmt.Errorf("no ids provided")
-		}
-		if idsType == "transaction" {
-			explanations, err = explanationsForTransactions(c.Context, client, profile.BaseURL, ids)
-			if err != nil {
-				return err
-			}
-		} else {
-			for _, id := range ids {
-				resolved, err := normalizeResourceURL(profile.BaseURL, "bank_transaction_explanations", id)
-				if err != nil {
-					return err
-				}
-				explanations = append(explanations, resolved)
-			}
-		}
-	} else {
-		explanations, err = explanationsForDateRange(c, client, profile.BaseURL)
-		if err != nil {
-			return err
-		}
-	}
-
-	explanations = dedupeStrings(explanations)
-	if len(explanations) == 0 {
-		return fmt.Errorf("no transactions to approve")
-	}
-
-	result := approveExplanations(c.Context, client, explanations)
-	if rt.JSONOutput {
-		data, err := json.Marshal(result)
-		if err != nil {
-			return err
-		}
-		return writeJSONOutput(data)
-	}
-
-	if len(result.Failed) == 0 {
-		fmt.Fprintf(os.Stdout, "Approved %d transaction(s)\n", len(result.Approved))
-		return nil
-	}
-
-	fmt.Fprintf(os.Stdout, "Approved %d transaction(s), %d failed\n", len(result.Approved), len(result.Failed))
-	for _, failure := range result.Failed {
-		fmt.Fprintf(os.Stdout, "Failed: %s (%s)\n", failure.ID, failure.Error)
-	}
-	return fmt.Errorf("some approvals failed")
-}
-
-type approveResult struct {
-	Approved []string        `json:"approved"`
-	Failed   []approveFailed `json:"failed"`
-}
-
-type approveFailed struct {
-	ID    string `json:"id"`
-	Error string `json:"error"`
-}
-
-func approveExplanations(ctx context.Context, client *freeagent.Client, explanations []string) approveResult {
-	result := approveResult{}
-	payload := map[string]any{
-		"bank_transaction_explanation": map[string]any{
-			"marked_for_review": false,
+func bankTransactionsCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "transactions",
+		Usage: "Bank transactions",
+		Subcommands: []*cli.Command{
+			{
+				Name:  "list",
+				Usage: "List bank transactions",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
+					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "view", Usage: "API view filter (for example: unexplained)"},
+				},
+				Action: bankTransactionsList,
+			},
 		},
 	}
-	for _, explanation := range explanations {
-		_, _, _, err := client.DoJSON(ctx, http.MethodPut, explanation, payload)
-		if err != nil {
-			result.Failed = append(result.Failed, approveFailed{ID: explanation, Error: err.Error()})
-			continue
-		}
-		result.Approved = append(result.Approved, explanation)
-	}
-	return result
 }
 
-func explanationsForDateRange(c *cli.Context, client *freeagent.Client, baseURL string) ([]string, error) {
-	bankAccount := strings.TrimSpace(c.String("bank-account"))
-	if bankAccount == "" {
-		return nil, fmt.Errorf("bank-account is required when approving by date range")
+func bankExplanationsCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "explanations",
+		Usage: "Bank transaction explanations",
+		Subcommands: []*cli.Command{
+			{
+				Name:  "list",
+				Usage: "List bank transaction explanations",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL"},
+					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
+					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
+				},
+				Action: bankExplanationsList,
+			},
+			{
+				Name:  "get",
+				Usage: "Get a bank transaction explanation by ID or URL",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "id", Usage: "Explanation ID"},
+					&cli.StringFlag{Name: "url", Usage: "Explanation URL"},
+				},
+				Action: bankExplanationsGet,
+			},
+		},
 	}
-	bankAccountURL, err := normalizeResourceURL(baseURL, "bank_accounts", bankAccount)
-	if err != nil {
-		return nil, err
-	}
-
-	query := url.Values{}
-	query.Set("bank_account", bankAccountURL)
-	if v := strings.TrimSpace(c.String("from")); v != "" {
-		query.Set("from_date", v)
-	}
-	if v := strings.TrimSpace(c.String("to")); v != "" {
-		query.Set("to_date", v)
-	}
-	if v := strings.TrimSpace(c.String("updated-since")); v != "" {
-		query.Set("updated_since", v)
-	}
-
-	if query.Get("from_date") == "" && query.Get("to_date") == "" && query.Get("updated_since") == "" {
-		return nil, fmt.Errorf("provide --ids or a date filter (--from/--to/--updated-since)")
-	}
-
-	path := "/bank_transaction_explanations?" + query.Encode()
-	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
-	if err != nil {
-		return nil, err
-	}
-
-	var decoded map[string]any
-	if err := json.Unmarshal(resp, &decoded); err != nil {
-		return nil, err
-	}
-	list, _ := decoded["bank_transaction_explanations"].([]any)
-
-	var explanations []string
-	for _, item := range list {
-		explanation, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		if marked, ok := explanation["marked_for_review"].(bool); ok && !marked {
-			continue
-		}
-		if urlValue, ok := explanation["url"].(string); ok && urlValue != "" {
-			explanations = append(explanations, urlValue)
-		}
-	}
-	return explanations, nil
 }
 
-func explanationsForTransactions(ctx context.Context, client *freeagent.Client, baseURL string, ids []string) ([]string, error) {
-	var explanations []string
-	for _, id := range ids {
-		txnURL, err := normalizeResourceURL(baseURL, "bank_transactions", id)
-		if err != nil {
-			return nil, err
-		}
-		resp, _, _, err := client.Do(ctx, http.MethodGet, txnURL, nil, "")
-		if err != nil {
-			return nil, err
-		}
+func bankAccountsList(c *cli.Context) error {
+	rt, client, _, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+
+	query := buildQueryParams(map[string]string{"view": c.String("view")})
+	path := appendQuery("/bank_accounts", query)
+
+	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	if err != nil {
+		return err
+	}
+
+	return printOrJSON(rt, resp, func() error {
 		var decoded map[string]any
 		if err := json.Unmarshal(resp, &decoded); err != nil {
-			return nil, err
+			return err
 		}
-		txn, _ := decoded["bank_transaction"].(map[string]any)
-		if txn == nil {
-			continue
+		list, _ := decoded["bank_accounts"].([]any)
+		if len(list) == 0 {
+			fmt.Fprintln(os.Stdout, "No bank accounts found")
+			return nil
 		}
-		items, _ := txn["bank_transaction_explanations"].([]any)
-		for _, item := range items {
-			entry, ok := item.(map[string]any)
-			if !ok {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "Name\tType\tCurrency\tBalance\tURL")
+		for _, item := range list {
+			acct, _ := item.(map[string]any)
+			if acct == nil {
 				continue
 			}
-			if urlValue, ok := entry["url"].(string); ok && urlValue != "" {
-				explanations = append(explanations, urlValue)
-			}
+			fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\n",
+				acct["name"], acct["type"], acct["currency"],
+				acct["current_balance"], acct["url"])
 		}
-	}
-	return explanations, nil
-}
-
-func parseIDList(input string) ([]string, error) {
-	input = strings.TrimSpace(input)
-	if input == "" {
-		return nil, nil
-	}
-	if strings.HasPrefix(input, "@") {
-		path := strings.TrimPrefix(input, "@")
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return nil, err
-		}
-		return splitIDs(string(data)), nil
-	}
-	if looksLikeFile(input) {
-		data, err := os.ReadFile(input)
-		if err != nil {
-			return nil, err
-		}
-		return splitIDs(string(data)), nil
-	}
-	return splitIDs(input), nil
-}
-
-func looksLikeFile(path string) bool {
-	if strings.Contains(path, "\n") {
-		return false
-	}
-	if _, err := os.Stat(path); err == nil {
-		return true
-	}
-	return false
-}
-
-func splitIDs(input string) []string {
-	input = strings.TrimSpace(strings.TrimPrefix(input, "@"))
-	if input == "" {
-		return nil
-	}
-	raw := strings.FieldsFunc(input, func(r rune) bool {
-		return r == ',' || r == '\n' || r == '\r' || r == '\t' || r == ' '
+		return w.Flush()
 	})
-	var out []string
-	for _, value := range raw {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			continue
-		}
-		out = append(out, value)
-	}
-	return out
 }
 
-func dedupeStrings(values []string) []string {
-	seen := map[string]struct{}{}
-	var out []string
-	for _, value := range values {
-		if value == "" {
-			continue
-		}
-		if _, ok := seen[value]; ok {
-			continue
-		}
-		seen[value] = struct{}{}
-		out = append(out, value)
+func bankAccountsGet(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
 	}
-	return out
+
+	path, err := requireIDOrURL(profile.BaseURL, "bank_accounts", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+
+	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		acct, _ := decoded["bank_account"].(map[string]any)
+		if acct == nil {
+			fmt.Fprintln(os.Stdout, string(resp))
+			return nil
+		}
+		fmt.Fprintf(os.Stdout, "Name:     %v\n", acct["name"])
+		fmt.Fprintf(os.Stdout, "Type:     %v\n", acct["type"])
+		fmt.Fprintf(os.Stdout, "Currency: %v\n", acct["currency"])
+		fmt.Fprintf(os.Stdout, "Balance:  %v\n", acct["current_balance"])
+		fmt.Fprintf(os.Stdout, "URL:      %v\n", acct["url"])
+		return nil
+	})
+}
+
+func bankTransactionsList(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+
+	acct := c.String("bank-account")
+	if acct == "" {
+		return fmt.Errorf("bank-account is required")
+	}
+	acctURL, err := normalizeResourceURL(profile.BaseURL, "bank_accounts", acct)
+	if err != nil {
+		return err
+	}
+
+	query := buildQueryParams(map[string]string{
+		"bank_account":  acctURL,
+		"from_date":     c.String("from"),
+		"to_date":       c.String("to"),
+		"updated_since": c.String("updated-since"),
+		"view":          c.String("view"),
+	})
+	path := appendQuery("/bank_transactions", query)
+
+	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		list, _ := decoded["bank_transactions"].([]any)
+		if len(list) == 0 {
+			fmt.Fprintln(os.Stdout, "No transactions found")
+			return nil
+		}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "Date\tAmount\tDescription\tURL")
+		for _, item := range list {
+			txn, _ := item.(map[string]any)
+			if txn == nil {
+				continue
+			}
+			fmt.Fprintf(w, "%v\t%v\t%v\t%v\n",
+				txn["dated_on"], txn["amount"], txn["description"], txn["url"])
+		}
+		return w.Flush()
+	})
+}
+
+func bankExplanationsList(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+
+	params := map[string]string{
+		"from_date":     c.String("from"),
+		"to_date":       c.String("to"),
+		"updated_since": c.String("updated-since"),
+	}
+	if acct := c.String("bank-account"); acct != "" {
+		acctURL, err := normalizeResourceURL(profile.BaseURL, "bank_accounts", acct)
+		if err != nil {
+			return err
+		}
+		params["bank_account"] = acctURL
+	}
+
+	path := appendQuery("/bank_transaction_explanations", buildQueryParams(params))
+
+	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		list, _ := decoded["bank_transaction_explanations"].([]any)
+		if len(list) == 0 {
+			fmt.Fprintln(os.Stdout, "No explanations found")
+			return nil
+		}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "Date\tGross\tCategory\tDescription\tURL")
+		for _, item := range list {
+			exp, _ := item.(map[string]any)
+			if exp == nil {
+				continue
+			}
+			fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\n",
+				exp["dated_on"], exp["gross_value"], exp["category"],
+				exp["description"], exp["url"])
+		}
+		return w.Flush()
+	})
+}
+
+func bankExplanationsGet(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+
+	path, err := requireIDOrURL(profile.BaseURL, "bank_transaction_explanations", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+
+	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		exp, _ := decoded["bank_transaction_explanation"].(map[string]any)
+		if exp == nil {
+			fmt.Fprintln(os.Stdout, string(resp))
+			return nil
+		}
+		fmt.Fprintf(os.Stdout, "Date:        %v\n", exp["dated_on"])
+		fmt.Fprintf(os.Stdout, "Gross:       %v\n", exp["gross_value"])
+		fmt.Fprintf(os.Stdout, "Category:    %v\n", exp["category"])
+		fmt.Fprintf(os.Stdout, "Description: %v\n", exp["description"])
+		fmt.Fprintf(os.Stdout, "URL:         %v\n", exp["url"])
+		return nil
+	})
+}
+
+// bootstrapClient reduces the loadConfig/ensureProfile/newClient boilerplate
+// that every command opens with.
+func bootstrapClient(c *cli.Context) (Runtime, *freeagent.Client, config.Profile, error) {
+	rt, err := runtimeFrom(c)
+	if err != nil {
+		return Runtime{}, nil, config.Profile{}, err
+	}
+	cfg, _, err := loadConfig(rt)
+	if err != nil {
+		return Runtime{}, nil, config.Profile{}, err
+	}
+	profile := ensureProfile(cfg, rt.Profile, rt, config.Profile{})
+	client, _, err := newClient(context.Background(), rt, profile)
+	if err != nil {
+		return Runtime{}, nil, config.Profile{}, err
+	}
+	return rt, client, profile, nil
 }

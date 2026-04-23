@@ -1,0 +1,12 @@
+{
+  "bill": {
+    "url": "https://api.sandbox.freeagent.com/v2/bills/100",
+    "reference": "INV-001",
+    "dated_on": "2026-02-01",
+    "due_on": "2026-03-01",
+    "status": "Open",
+    "currency": "GBP",
+    "total_value": "250.00",
+    "contact": "https://api.sandbox.freeagent.com/v2/contacts/1"
+  }
+}

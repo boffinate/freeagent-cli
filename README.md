@@ -157,6 +157,25 @@ Contacts:
 ./freeagent contacts create --organisation "Acme Ltd" --email accounts@acme.test
 ```
 
+Bank accounts and transactions (read):
+
+```bash
+./freeagent bank accounts list
+./freeagent bank accounts get --id BANK_ACCOUNT_ID
+./freeagent bank transactions list --bank-account BANK_ACCOUNT_ID --from 2026-01-01 --to 2026-01-31
+./freeagent bank explanations list --bank-account BANK_ACCOUNT_ID
+./freeagent bank explanations get --id EXPLANATION_ID
+```
+
+Bills, expenses, credit notes (read):
+
+```bash
+./freeagent bills list --from 2026-01-01 --to 2026-03-31
+./freeagent bills get --id BILL_ID
+./freeagent expenses list --user USER_ID --from 2026-01-01
+./freeagent credit-notes list --contact CONTACT_ID
+```
+
 Bank transactions (bulk approve):
 
 ```bash

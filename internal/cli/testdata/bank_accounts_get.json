@@ -1,0 +1,9 @@
+{
+  "bank_account": {
+    "url": "https://api.sandbox.freeagent.com/v2/bank_accounts/1",
+    "name": "Current",
+    "type": "StandardBankAccount",
+    "currency": "GBP",
+    "current_balance": "1234.56"
+  }
+}

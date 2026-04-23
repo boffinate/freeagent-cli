@@ -1,0 +1,10 @@
+{
+  "bank_transactions": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/bank_transactions/11",
+      "dated_on": "2026-01-15",
+      "amount": "-42.10",
+      "description": "Coffee shop"
+    }
+  ]
+}

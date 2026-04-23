@@ -1,0 +1,14 @@
+{
+  "expenses": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/expenses/200",
+      "dated_on": "2026-02-05",
+      "description": "Taxi to airport",
+      "currency": "GBP",
+      "gross_value": "55.00",
+      "category": "https://api.sandbox.freeagent.com/v2/categories/100",
+      "user": "https://api.sandbox.freeagent.com/v2/users/7",
+      "project": "https://api.sandbox.freeagent.com/v2/projects/5"
+    }
+  ]
+}
