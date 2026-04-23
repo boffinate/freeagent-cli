@@ -53,6 +53,7 @@ func NewApp() *cli.App {
 			invoiceCommand(),
 			priceListItemsCommand(),
 			projectsCommand(),
+			reportsCommand(),
 			stockItemsCommand(),
 			tasksCommand(),
 			timeslipsCommand(),

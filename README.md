@@ -167,6 +167,15 @@ Bank accounts and transactions (read):
 ./freeagent bank explanations get --id EXPLANATION_ID
 ```
 
+Reports (raw JSON in both table and --json modes):
+
+```bash
+./freeagent reports balance-sheet --as-at 2026-03-31
+./freeagent reports profit-and-loss --from 2026-01-01 --to 2026-03-31
+./freeagent reports trial-balance --from 2026-01-01 --to 2026-03-31
+./freeagent reports cashflow --from 2026-01-01 --to 2026-03-31
+```
+
 Reference data (company, users, categories, currencies, price list, stock):
 
 ```bash

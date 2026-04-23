@@ -1,0 +1,9 @@
+{
+  "balance_sheet": {
+    "dated_on": "2026-03-31",
+    "category_totals": {
+      "fixed_assets": "10000.00",
+      "current_assets": "5000.00"
+    }
+  }
+}
