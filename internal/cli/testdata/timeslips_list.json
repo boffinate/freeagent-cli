@@ -1,0 +1,12 @@
+{
+  "timeslips": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/timeslips/30",
+      "dated_on": "2026-02-12",
+      "hours": "4.0",
+      "user": "https://api.sandbox.freeagent.com/v2/users/7",
+      "project": "https://api.sandbox.freeagent.com/v2/projects/5",
+      "task": "https://api.sandbox.freeagent.com/v2/tasks/9"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "projects": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/projects/5",
+      "name": "Website redesign",
+      "status": "Active",
+      "contact": "https://api.sandbox.freeagent.com/v2/contacts/1",
+      "currency": "GBP"
+    }
+  ]
+}

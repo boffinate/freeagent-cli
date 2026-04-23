@@ -167,6 +167,16 @@ Bank accounts and transactions (read):
 ./freeagent bank explanations get --id EXPLANATION_ID
 ```
 
+Projects, tasks, timeslips, estimates:
+
+```bash
+./freeagent projects list --view active
+./freeagent projects get --id PROJECT_ID
+./freeagent tasks list --project PROJECT_ID
+./freeagent timeslips list --from 2026-01-01 --to 2026-01-31 --user USER_ID
+./freeagent estimates list --contact CONTACT_ID
+```
+
 Bills, expenses, credit notes (read):
 
 ```bash

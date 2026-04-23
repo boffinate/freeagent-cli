@@ -10,8 +10,12 @@ var expectedFullCommands = map[string][]string{
 	"bills":        {"list", "get"},
 	"contacts":     {"list", "search", "get", "create"},
 	"credit-notes": {"list", "get"},
+	"estimates":    {"list", "get"},
 	"expenses":     {"list", "get"},
 	"invoices":     {"list", "get", "delete", "create", "send"},
+	"projects":     {"list", "get"},
+	"tasks":        {"list", "get"},
+	"timeslips":    {"list", "get"},
 	"raw":          nil,
 }
 

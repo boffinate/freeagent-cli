@@ -45,8 +45,12 @@ func NewApp() *cli.App {
 			billsCommand(),
 			contactsCommand(),
 			creditNotesCommand(),
+			estimatesCommand(),
 			expensesCommand(),
 			invoiceCommand(),
+			projectsCommand(),
+			tasksCommand(),
+			timeslipsCommand(),
 		}, writeCommands()...),
 	}
 

@@ -10,8 +10,12 @@ var expectedReadonlyCommands = map[string][]string{
 	"bills":        {"list", "get"},
 	"contacts":     {"list", "search", "get"},
 	"credit-notes": {"list", "get"},
+	"estimates":    {"list", "get"},
 	"expenses":     {"list", "get"},
 	"invoices":     {"list", "get"},
+	"projects":     {"list", "get"},
+	"tasks":        {"list", "get"},
+	"timeslips":    {"list", "get"},
 }
 
 var forbiddenReadonlyCommands = []string{"raw"}

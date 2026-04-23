@@ -1,0 +1,13 @@
+{
+  "estimates": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/estimates/40",
+      "reference": "EST-001",
+      "status": "Draft",
+      "dated_on": "2026-02-18",
+      "currency": "GBP",
+      "total_value": "2000.00",
+      "contact": "https://api.sandbox.freeagent.com/v2/contacts/1"
+    }
+  ]
+}
