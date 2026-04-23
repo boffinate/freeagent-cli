@@ -34,7 +34,7 @@ func (c *Client) httpClient() *http.Client {
 	if c.HTTP != nil {
 		return c.HTTP
 	}
-	return &http.Client{Timeout: timeoutDefault}
+	return defaultHTTPClient()
 }
 
 func (c *Client) ResolveURL(path string) (string, error) {
@@ -92,6 +92,9 @@ func (c *Client) Refresh(ctx context.Context, refreshToken string) (*storage.Tok
 
 func (c *Client) tokenRequest(ctx context.Context, payload url.Values) (*storage.Token, error) {
 	u := strings.TrimRight(c.BaseURL, "/") + "/token_endpoint"
+	if err := enforceReadOnly(http.MethodPost, u); err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, strings.NewReader(payload.Encode()))
 	if err != nil {
 		return nil, err
@@ -185,6 +188,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body io.Reader, co
 	if err != nil {
 		return nil, 0, nil, err
 	}
+	if err := enforceReadOnly(method, urlStr); err != nil {
+		return nil, 0, nil, err
+	}
 
 	var payload []byte
 	if body != nil {
@@ -224,6 +230,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body io.Reader, co
 func (c *Client) doRequest(ctx context.Context, method, urlStr string, body []byte, contentType, accessToken string) ([]byte, int, http.Header, error) {
 	retry := 0
 	for {
+		if err := enforceReadOnly(method, urlStr); err != nil {
+			return nil, 0, nil, err
+		}
 		var reader io.Reader
 		if body != nil {
 			reader = bytes.NewReader(body)
