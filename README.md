@@ -9,8 +9,34 @@ A small CLI for the FreeAgent API, built in Go.
 - Create and send invoices
 - Break-glass `raw` command for any FreeAgent endpoint
 - JSON output mode for scripting / agents
+- Read-only build for AI / scripting use (see "Safety model" below)
+
+## Safety model
+
+This repo produces **two binaries** from one source tree:
+
+| Binary | Who it's for | What it can do |
+|---|---|---|
+| `freeagent` | Humans at a terminal | Full read + write: create invoices, send email, approve bank transactions, delete drafts, arbitrary `raw` calls. |
+| `freeagent-ro` | AI agents, scripts, anywhere accidental writes would be unacceptable | Read-only against FreeAgent business data. |
+
+**"Read-only" means**: no mutation of FreeAgent business data (invoices, bank transactions, contacts, etc.). The RO binary still reads/writes local config, reads/writes tokens in the OS keychain / file fallback, and performs OAuth `POST`s to FreeAgent's `/v2/token_endpoint`. These are OAuth-internal and do not touch your FreeAgent business data.
+
+**Why two binaries rather than a `--write` flag:** a flag can be passed by mistake (or passed deliberately by an LLM reading the README). The write code paths are not compiled into `freeagent-ro` at all — there is no flag to flip and no runtime check to bypass.
+
+Two independent safety layers are enforced in CI:
+
+1. **Command-tree exclusion** via Go build tags. `freeagent-ro` does not register `bank`, `raw`, `contacts create`, `invoices create`, `invoices send`, or `invoices delete`.
+2. **HTTP-client guard**. Under `-tags readonly`, every request must satisfy all of:
+   - https scheme (no plaintext HTTP — bearer tokens must not traverse unencrypted),
+   - host in `{api.freeagent.com, api.sandbox.freeagent.com}` (blocks bearer-token exfiltration via `--base-url` or server-returned absolute URLs),
+   - method is GET/HEAD, **or** POST to the exact path `/v2/token_endpoint` (OAuth flow).
+
+   This catches the case where a future refactor adds a mutating call inside a read subcommand.
 
 ## Install
+
+### Full (read + write) binary
 
 ```bash
 go install github.com/anjor/freeagent-cli/cmd/freeagent@latest
@@ -19,8 +45,35 @@ go install github.com/anjor/freeagent-cli/cmd/freeagent@latest
 Or build from source:
 
 ```bash
-go build ./cmd/freeagent
+make build   # produces bin/freeagent
 ```
+
+### Read-only binary
+
+```bash
+git clone https://github.com/anjor/freeagent-cli.git
+cd freeagent-cli
+make install-ro           # installs to $GOPATH/bin/freeagent-ro
+# or, to a custom location:
+PREFIX=/usr/local/bin make install-ro
+```
+
+`make install-ro` runs the readonly test suite (command-tree assertion + HTTP-guard tests) before copying the binary, so a broken RO build cannot quietly land on disk.
+
+### Claude Code harness allow-list example
+
+Add to `.claude/settings.json` to give Claude Code the RO binary but not the full one:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(freeagent-ro:*)"],
+    "deny":  ["Bash(freeagent:*)"]
+  }
+}
+```
+
+Anchor the path if multiple binaries named `freeagent` may be on `$PATH` — e.g. `Bash(/usr/local/bin/freeagent-ro:*)`.
 
 ## Configure
 
