@@ -39,13 +39,11 @@ func NewApp() *cli.App {
 			},
 		},
 		Before: initRuntime,
-		Commands: []*cli.Command{
+		Commands: append([]*cli.Command{
 			authCommand(),
-			bankCommand(),
 			contactsCommand(),
 			invoiceCommand(),
-			rawCommand(),
-		},
+		}, writeCommands()...),
 	}
 
 	cli.AppHelpTemplate = strings.ReplaceAll(cli.AppHelpTemplate, "GLOBAL OPTIONS", "GLOBAL FLAGS")
