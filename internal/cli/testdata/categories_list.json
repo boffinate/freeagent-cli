@@ -1,0 +1,18 @@
+{
+  "admin_expenses_categories": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/categories/285",
+      "nominal_code": "285",
+      "description": "Travel"
+    }
+  ],
+  "cost_of_sales_categories": [],
+  "income_categories": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/categories/001",
+      "nominal_code": "001",
+      "description": "Sales"
+    }
+  ],
+  "general_categories": []
+}

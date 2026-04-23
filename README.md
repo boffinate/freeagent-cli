@@ -167,6 +167,18 @@ Bank accounts and transactions (read):
 ./freeagent bank explanations get --id EXPLANATION_ID
 ```
 
+Reference data (company, users, categories, currencies, price list, stock):
+
+```bash
+./freeagent company show
+./freeagent users list
+./freeagent users me
+./freeagent categories list
+./freeagent currencies list
+./freeagent price-list-items list
+./freeagent stock-items list
+```
+
 Projects, tasks, timeslips, estimates:
 
 ```bash

@@ -5,18 +5,24 @@ package cli
 import "testing"
 
 var expectedFullCommands = map[string][]string{
-	"auth":         {"configure", "login", "status", "refresh", "logout"},
-	"bank":         {"accounts", "transactions", "explanations", "approve"},
-	"bills":        {"list", "get"},
-	"contacts":     {"list", "search", "get", "create"},
-	"credit-notes": {"list", "get"},
-	"estimates":    {"list", "get"},
-	"expenses":     {"list", "get"},
-	"invoices":     {"list", "get", "delete", "create", "send"},
-	"projects":     {"list", "get"},
-	"tasks":        {"list", "get"},
-	"timeslips":    {"list", "get"},
-	"raw":          nil,
+	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"bank":             {"accounts", "transactions", "explanations", "approve"},
+	"bills":            {"list", "get"},
+	"categories":       {"list"},
+	"company":          {"show"},
+	"contacts":         {"list", "search", "get", "create"},
+	"credit-notes":     {"list", "get"},
+	"currencies":       {"list"},
+	"estimates":        {"list", "get"},
+	"expenses":         {"list", "get"},
+	"invoices":         {"list", "get", "delete", "create", "send"},
+	"price-list-items": {"list", "get"},
+	"projects":         {"list", "get"},
+	"stock-items":      {"list", "get"},
+	"tasks":            {"list", "get"},
+	"timeslips":        {"list", "get"},
+	"users":            {"list", "get", "me"},
+	"raw":              nil,
 }
 
 func TestDefaultBuildRegistersAllCommands(t *testing.T) {

@@ -1,0 +1,10 @@
+{
+  "company": {
+    "url": "https://api.sandbox.freeagent.com/v2/company",
+    "name": "Test Ltd",
+    "type": "UkLimitedCompany",
+    "currency": "GBP",
+    "company_registration_number": "12345678",
+    "subdomain": "testco"
+  }
+}

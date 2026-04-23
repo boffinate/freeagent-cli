@@ -5,17 +5,23 @@ package cli
 import "testing"
 
 var expectedReadonlyCommands = map[string][]string{
-	"auth":         {"configure", "login", "status", "refresh", "logout"},
-	"bank":         {"accounts", "transactions", "explanations"},
-	"bills":        {"list", "get"},
-	"contacts":     {"list", "search", "get"},
-	"credit-notes": {"list", "get"},
-	"estimates":    {"list", "get"},
-	"expenses":     {"list", "get"},
-	"invoices":     {"list", "get"},
-	"projects":     {"list", "get"},
-	"tasks":        {"list", "get"},
-	"timeslips":    {"list", "get"},
+	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"bank":             {"accounts", "transactions", "explanations"},
+	"bills":            {"list", "get"},
+	"categories":       {"list"},
+	"company":          {"show"},
+	"contacts":         {"list", "search", "get"},
+	"credit-notes":     {"list", "get"},
+	"currencies":       {"list"},
+	"estimates":        {"list", "get"},
+	"expenses":         {"list", "get"},
+	"invoices":         {"list", "get"},
+	"price-list-items": {"list", "get"},
+	"projects":         {"list", "get"},
+	"stock-items":      {"list", "get"},
+	"tasks":            {"list", "get"},
+	"timeslips":        {"list", "get"},
+	"users":            {"list", "get", "me"},
 }
 
 var forbiddenReadonlyCommands = []string{"raw"}

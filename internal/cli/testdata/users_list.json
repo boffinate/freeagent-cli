@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/users/7",
+      "first_name": "Ada",
+      "last_name": "Lovelace",
+      "email": "ada@example.com",
+      "role": "Owner"
+    }
+  ]
+}
