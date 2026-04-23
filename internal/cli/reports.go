@@ -55,7 +55,7 @@ func reportsCommand() *cli.Command {
 
 func reportsBalanceSheet(c *cli.Context) error {
 	params := map[string]string{"as_at_date": c.String("as-at")}
-	return runReport(c, "/balance_sheet", params)
+	return runReport(c, "/accounting/balance_sheet", params)
 }
 
 func reportsProfitAndLoss(c *cli.Context) error {

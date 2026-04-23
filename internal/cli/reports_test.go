@@ -21,7 +21,7 @@ func TestReportsBalanceSheet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
-	if gotPath != "/v2/balance_sheet" {
+	if gotPath != "/v2/accounting/balance_sheet" {
 		t.Errorf("path = %q", gotPath)
 	}
 	if !strings.Contains(gotQuery, "as_at_date=2026-03-31") {
