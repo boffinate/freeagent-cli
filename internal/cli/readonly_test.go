@@ -5,12 +5,26 @@ package cli
 import "testing"
 
 var expectedReadonlyCommands = map[string][]string{
-	"auth":     {"configure", "login", "status", "refresh", "logout"},
-	"contacts": {"list", "search", "get"},
-	"invoices": {"list", "get"},
+	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"bank":             {"accounts", "transactions", "explanations"},
+	"bills":            {"list", "get"},
+	"categories":       {"list"},
+	"company":          {"show"},
+	"contacts":         {"list", "search", "get"},
+	"credit-notes":     {"list", "get"},
+	"estimates":        {"list", "get"},
+	"expenses":         {"list", "get"},
+	"invoices":         {"list", "get"},
+	"price-list-items": {"list", "get"},
+	"projects":         {"list", "get"},
+	"reports":          {"balance-sheet", "profit-and-loss", "trial-balance", "cashflow"},
+	"stock-items":      {"list", "get"},
+	"tasks":            {"list", "get"},
+	"timeslips":        {"list", "get"},
+	"users":            {"list", "get", "me"},
 }
 
-var forbiddenReadonlyCommands = []string{"bank", "raw"}
+var forbiddenReadonlyCommands = []string{"raw"}
 
 func TestReadonlyBuildHasNoWriteCommands(t *testing.T) {
 	app := NewApp()

@@ -41,8 +41,22 @@ func NewApp() *cli.App {
 		Before: initRuntime,
 		Commands: append([]*cli.Command{
 			authCommand(),
+			bankCommand(),
+			billsCommand(),
+			categoriesCommand(),
+			companyCommand(),
 			contactsCommand(),
+			creditNotesCommand(),
+			estimatesCommand(),
+			expensesCommand(),
 			invoiceCommand(),
+			priceListItemsCommand(),
+			projectsCommand(),
+			reportsCommand(),
+			stockItemsCommand(),
+			tasksCommand(),
+			timeslipsCommand(),
+			usersCommand(),
 		}, writeCommands()...),
 	}
 

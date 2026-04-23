@@ -5,11 +5,24 @@ package cli
 import "testing"
 
 var expectedFullCommands = map[string][]string{
-	"auth":     {"configure", "login", "status", "refresh", "logout"},
-	"bank":     {"approve"},
-	"contacts": {"list", "search", "get", "create"},
-	"invoices": {"list", "get", "delete", "create", "send"},
-	"raw":      nil,
+	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"bank":             {"accounts", "transactions", "explanations", "approve"},
+	"bills":            {"list", "get"},
+	"categories":       {"list"},
+	"company":          {"show"},
+	"contacts":         {"list", "search", "get", "create"},
+	"credit-notes":     {"list", "get"},
+	"estimates":        {"list", "get"},
+	"expenses":         {"list", "get"},
+	"invoices":         {"list", "get", "delete", "create", "send"},
+	"price-list-items": {"list", "get"},
+	"projects":         {"list", "get"},
+	"reports":          {"balance-sheet", "profit-and-loss", "trial-balance", "cashflow"},
+	"stock-items":      {"list", "get"},
+	"tasks":            {"list", "get"},
+	"timeslips":        {"list", "get"},
+	"users":            {"list", "get", "me"},
+	"raw":              nil,
 }
 
 func TestDefaultBuildRegistersAllCommands(t *testing.T) {

@@ -2,8 +2,11 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -13,12 +16,29 @@ import (
 	"github.com/anjor/freeagent-cli/internal/storage"
 )
 
+// newTokenStore produces the TokenStore used by newClient. Tests override this
+// via installTestHooks to substitute an in-memory store and must restore the
+// original via t.Cleanup. The hook is a package-level var, so tests that
+// install hooks must not run in parallel.
+var newTokenStore = func(rt Runtime) (storage.TokenStore, error) {
+	return storage.NewDefaultStore()
+}
+
+// newHTTPClient produces the *http.Client used by newClient. Returning nil
+// means "use freeagent.Client's default"; production code always returns nil.
+// Tests override to route traffic through an httptest server while preserving
+// the readonly redirect guard.
+var newHTTPClient = func(rt Runtime) *http.Client { return nil }
+
+// loadConfigHook indirects config.Load so tests can inject an in-memory
+// config pointing BaseURL at api.sandbox.freeagent.com (the readonly build's
+// allowed host) without touching the user's config file.
+var loadConfigHook = func(rt Runtime) (*config.Config, string, error) {
+	return config.Load(rt.ConfigPath)
+}
+
 func loadConfig(rt Runtime) (*config.Config, string, error) {
-	cfg, cfgPath, err := config.Load(rt.ConfigPath)
-	if err != nil {
-		return nil, "", err
-	}
-	return cfg, cfgPath, nil
+	return loadConfigHook(rt)
 }
 
 func ensureProfile(cfg *config.Config, profileName string, rt Runtime, overrides config.Profile) config.Profile {
@@ -54,8 +74,8 @@ func saveProfile(cfg *config.Config, profileName, cfgPath string, profile config
 	return cfg.Save(cfgPath)
 }
 
-func newClient(ctx context.Context, rt Runtime, profile config.Profile) (*freeagent.Client, *storage.Store, error) {
-	store, err := storage.NewDefaultStore()
+func newClient(ctx context.Context, rt Runtime, profile config.Profile) (*freeagent.Client, storage.TokenStore, error) {
+	store, err := newTokenStore(rt)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,6 +88,7 @@ func newClient(ctx context.Context, rt Runtime, profile config.Profile) (*freeag
 		RedirectURI:  profile.RedirectURI,
 		Profile:      rt.Profile,
 		Store:        store,
+		HTTP:         newHTTPClient(rt),
 	}
 	return client, store, nil
 }
@@ -103,4 +124,67 @@ func require(value, name string) error {
 func writeJSONOutput(data []byte) error {
 	_, err := os.Stdout.Write(append(data, '\n'))
 	return err
+}
+
+// getAndDecode issues a GET and decodes the JSON body into *T. Returns both
+// the decoded value and the raw bytes so callers can choose JSON passthrough.
+func getAndDecode[T any](ctx context.Context, client *freeagent.Client, path string) (*T, []byte, error) {
+	resp, _, _, err := client.Do(ctx, http.MethodGet, path, nil, "")
+	if err != nil {
+		return nil, resp, err
+	}
+	var decoded T
+	if err := json.Unmarshal(resp, &decoded); err != nil {
+		return nil, resp, err
+	}
+	return &decoded, resp, nil
+}
+
+// buildQueryParams URL-encodes a set of query parameters, skipping blanks
+// after trimming. Values and keys are passed through verbatim otherwise.
+func buildQueryParams(params map[string]string) string {
+	if len(params) == 0 {
+		return ""
+	}
+	q := url.Values{}
+	for k, v := range params {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		q.Set(k, v)
+	}
+	return q.Encode()
+}
+
+// appendQuery attaches an already-encoded query string to path.
+func appendQuery(path, encoded string) string {
+	if encoded == "" {
+		return path
+	}
+	if strings.Contains(path, "?") {
+		return path + "&" + encoded
+	}
+	return path + "?" + encoded
+}
+
+// printOrJSON writes raw to stdout when rt.JSONOutput is set; otherwise calls
+// fallback to render whatever formatted output the caller prefers.
+func printOrJSON(rt Runtime, raw []byte, fallback func() error) error {
+	if rt.JSONOutput {
+		return writeJSONOutput(raw)
+	}
+	return fallback()
+}
+
+// requireIDOrURL resolves a flag pair (id, url) against a resource collection
+// for commands that accept either. Returns the absolute request path.
+func requireIDOrURL(baseURL, resource, id, urlValue string) (string, error) {
+	if urlValue != "" {
+		return urlValue, nil
+	}
+	if id != "" {
+		return normalizeResourceURL(baseURL, resource, id)
+	}
+	return "", fmt.Errorf("id or url required")
 }

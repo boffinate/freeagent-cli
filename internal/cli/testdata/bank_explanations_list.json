@@ -1,0 +1,11 @@
+{
+  "bank_transaction_explanations": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/bank_transaction_explanations/21",
+      "dated_on": "2026-01-16",
+      "gross_value": "-42.10",
+      "category": "https://api.sandbox.freeagent.com/v2/categories/285",
+      "description": "Coffee shop"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "stock_items": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/stock_items/3",
+      "description": "Apple",
+      "stock_on_hand": "10.0"
+    }
+  ]
+}

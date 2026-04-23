@@ -1,0 +1,11 @@
+{
+  "price_list_items": [
+    {
+      "url": "https://api.sandbox.freeagent.com/v2/price_list_items/1",
+      "code": "A001",
+      "item_type": "Products",
+      "description": "Apple",
+      "price": "10.99"
+    }
+  ]
+}

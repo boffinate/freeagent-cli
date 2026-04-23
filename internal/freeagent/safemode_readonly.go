@@ -27,6 +27,16 @@ func defaultHTTPClient() *http.Client {
 	}
 }
 
+// DefaultHTTPClientWithTransport returns a client built from defaultHTTPClient
+// with Transport replaced. The readonly CheckRedirect hook is preserved so
+// tests continue to exercise the redirect guard. Intended for tests inside the
+// cli package.
+func DefaultHTTPClientWithTransport(t http.RoundTripper) *http.Client {
+	c := defaultHTTPClient()
+	c.Transport = t
+	return c
+}
+
 // tokenEndpointPath is the exact URL path of FreeAgent's OAuth token endpoint.
 // Only POST at this path (combined with an allowed host and https scheme) is
 // permitted, because hitting it drives the OAuth flow and never touches
