@@ -47,7 +47,6 @@ func NewApp() *cli.App {
 			companyCommand(),
 			contactsCommand(),
 			creditNotesCommand(),
-			currenciesCommand(),
 			estimatesCommand(),
 			expensesCommand(),
 			invoiceCommand(),

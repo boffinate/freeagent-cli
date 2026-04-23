@@ -81,7 +81,7 @@ func bankExplanationsCmd() *cli.Command {
 				Name:  "list",
 				Usage: "List bank transaction explanations",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL"},
+					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
@@ -232,17 +232,20 @@ func bankExplanationsList(c *cli.Context) error {
 		return err
 	}
 
+	acct := c.String("bank-account")
+	if acct == "" {
+		return fmt.Errorf("bank-account is required")
+	}
+	acctURL, err := normalizeResourceURL(profile.BaseURL, "bank_accounts", acct)
+	if err != nil {
+		return err
+	}
+
 	params := map[string]string{
+		"bank_account":  acctURL,
 		"from_date":     c.String("from"),
 		"to_date":       c.String("to"),
 		"updated_since": c.String("updated-since"),
-	}
-	if acct := c.String("bank-account"); acct != "" {
-		acctURL, err := normalizeResourceURL(profile.BaseURL, "bank_accounts", acct)
-		if err != nil {
-			return err
-		}
-		params["bank_account"] = acctURL
 	}
 
 	path := appendQuery("/bank_transaction_explanations", buildQueryParams(params))

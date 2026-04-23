@@ -176,14 +176,13 @@ Reports (raw JSON in both table and --json modes):
 ./freeagent reports cashflow --from 2026-01-01 --to 2026-03-31
 ```
 
-Reference data (company, users, categories, currencies, price list, stock):
+Reference data (company, users, categories, price list, stock):
 
 ```bash
 ./freeagent company show
 ./freeagent users list
 ./freeagent users me
 ./freeagent categories list
-./freeagent currencies list
 ./freeagent price-list-items list
 ./freeagent stock-items list
 ```

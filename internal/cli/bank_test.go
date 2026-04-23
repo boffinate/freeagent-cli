@@ -109,6 +109,42 @@ func TestBankTransactionsList(t *testing.T) {
 	}
 }
 
+func TestBankExplanationsListRequiresBankAccount(t *testing.T) {
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp().Run([]string{"freeagent", "bank", "explanations", "list"})
+	})
+	if err == nil || !strings.Contains(err.Error(), "bank-account") {
+		t.Errorf("expected bank-account required error, got %v", err)
+	}
+}
+
+func TestBankExplanationsList(t *testing.T) {
+	var gotQuery string
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.RawQuery
+		_, _ = w.Write(mustFixture(t, "bank_explanations_list.json"))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp().Run([]string{
+			"freeagent", "bank", "explanations", "list",
+			"--bank-account", "1",
+		})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if !strings.Contains(gotQuery, "bank_account=") {
+		t.Errorf("query %q missing bank_account", gotQuery)
+	}
+}
+
 func TestBankExplanationsGet(t *testing.T) {
 	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(mustFixture(t, "bank_explanations_get.json"))

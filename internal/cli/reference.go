@@ -20,16 +20,6 @@ func categoriesCommand() *cli.Command {
 	}
 }
 
-func currenciesCommand() *cli.Command {
-	return &cli.Command{
-		Name:  "currencies",
-		Usage: "Currencies",
-		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List currencies", Action: currenciesList},
-		},
-	}
-}
-
 func priceListItemsCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "price-list-items",
@@ -112,38 +102,6 @@ func categoriesList(c *cli.Context) error {
 	})
 }
 
-func currenciesList(c *cli.Context) error {
-	rt, client, _, err := bootstrapClient(c)
-	if err != nil {
-		return err
-	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/currencies", nil, "")
-	if err != nil {
-		return err
-	}
-	return printOrJSON(rt, resp, func() error {
-		var decoded map[string]any
-		if err := json.Unmarshal(resp, &decoded); err != nil {
-			return err
-		}
-		list, _ := decoded["currencies"].([]any)
-		if len(list) == 0 {
-			fmt.Fprintln(os.Stdout, "No currencies found")
-			return nil
-		}
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "Code\tURL")
-		for _, item := range list {
-			cur, _ := item.(map[string]any)
-			if cur == nil {
-				continue
-			}
-			fmt.Fprintf(w, "%v\t%v\n", cur["url"], cur["url"])
-		}
-		return w.Flush()
-	})
-}
-
 func priceListItemsList(c *cli.Context) error {
 	rt, client, _, err := bootstrapClient(c)
 	if err != nil {
@@ -164,13 +122,13 @@ func priceListItemsList(c *cli.Context) error {
 			return nil
 		}
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "Name\tItemCode\tPrice\tURL")
+		fmt.Fprintln(w, "Code\tDescription\tPrice\tURL")
 		for _, item := range list {
 			p, _ := item.(map[string]any)
 			if p == nil {
 				continue
 			}
-			fmt.Fprintf(w, "%v\t%v\t%v\t%v\n", p["item_name"], p["item_code"], p["price"], p["url"])
+			fmt.Fprintf(w, "%v\t%v\t%v\t%v\n", p["code"], p["description"], p["price"], p["url"])
 		}
 		return w.Flush()
 	})
@@ -215,13 +173,13 @@ func stockItemsList(c *cli.Context) error {
 			return nil
 		}
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "Name\tItemCode\tStock\tURL")
+		fmt.Fprintln(w, "Description\tStockOnHand\tURL")
 		for _, item := range list {
 			s, _ := item.(map[string]any)
 			if s == nil {
 				continue
 			}
-			fmt.Fprintf(w, "%v\t%v\t%v\t%v\n", s["item_name"], s["item_code"], s["stock_level"], s["url"])
+			fmt.Fprintf(w, "%v\t%v\t%v\n", s["description"], s["stock_on_hand"], s["url"])
 		}
 		return w.Flush()
 	})

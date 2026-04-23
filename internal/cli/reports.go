@@ -23,18 +23,17 @@ func reportsCommand() *cli.Command {
 			},
 			{
 				Name:  "profit-and-loss",
-				Usage: "Profit and loss report",
+				Usage: "Profit and loss summary",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
-					&cli.StringFlag{Name: "accounting-year", Usage: "Accounting year (YYYY) — alternative to --from/--to"},
-					&cli.StringFlag{Name: "accounting-period", Usage: "Accounting period name — used with --accounting-year"},
+					&cli.StringFlag{Name: "accounting-period", Usage: "Accounting period (YYYY/YY, e.g. 2022/23)"},
 				},
 				Action: reportsProfitAndLoss,
 			},
 			{
 				Name:  "trial-balance",
-				Usage: "Trial balance",
+				Usage: "Trial balance summary",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
@@ -60,16 +59,14 @@ func reportsBalanceSheet(c *cli.Context) error {
 }
 
 func reportsProfitAndLoss(c *cli.Context) error {
+	// P&L summary defaults to the current accounting year to date when no
+	// filter is supplied. Don't pre-filter.
 	params := map[string]string{
 		"from_date":         c.String("from"),
 		"to_date":           c.String("to"),
-		"accounting_year":   c.String("accounting-year"),
 		"accounting_period": c.String("accounting-period"),
 	}
-	if params["from_date"] == "" && params["to_date"] == "" && params["accounting_year"] == "" {
-		return fmt.Errorf("provide --from/--to or --accounting-year")
-	}
-	return runReport(c, "/profit_and_loss", params)
+	return runReport(c, "/accounting/profit_and_loss/summary", params)
 }
 
 func reportsTrialBalance(c *cli.Context) error {
@@ -77,13 +74,18 @@ func reportsTrialBalance(c *cli.Context) error {
 		"from_date": c.String("from"),
 		"to_date":   c.String("to"),
 	}
-	return runReport(c, "/trial_balance", params)
+	return runReport(c, "/accounting/trial_balance/summary", params)
 }
 
 func reportsCashflow(c *cli.Context) error {
+	from := c.String("from")
+	to := c.String("to")
+	if from == "" || to == "" {
+		return fmt.Errorf("--from and --to are both required")
+	}
 	params := map[string]string{
-		"from_date": c.String("from"),
-		"to_date":   c.String("to"),
+		"from_date": from,
+		"to_date":   to,
 	}
 	return runReport(c, "/cashflow", params)
 }
