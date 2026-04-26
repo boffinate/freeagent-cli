@@ -3,15 +3,18 @@
 GOBIN ?= $(shell go env GOPATH)/bin
 PREFIX ?= $(GOBIN)
 
+VERSION ?= $(shell git describe --tags --dirty --always 2>/dev/null || echo dev)
+LDFLAGS := -ldflags "-X main.Version=$(VERSION)"
+
 all: build build-ro
 
 build:
 	mkdir -p bin
-	go build -o bin/freeagent ./cmd/freeagent
+	go build $(LDFLAGS) -o bin/freeagent ./cmd/freeagent
 
 build-ro:
 	mkdir -p bin
-	go build -tags readonly -o bin/freeagent-ro ./cmd/freeagent
+	go build -tags readonly $(LDFLAGS) -o bin/freeagent-ro ./cmd/freeagent
 
 test:
 	go test ./...
