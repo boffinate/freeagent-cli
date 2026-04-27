@@ -41,7 +41,12 @@ jobs:
       - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           distribution: goreleaser
-          version: "~> v2"
+          # Exact version pin: the action downloads this binary and runs
+          # it with contents:write to publish your releases. A floating
+          # constraint like "~> v2" would silently adopt new GoReleaser
+          # builds; an exact pin makes upgrading a deliberate review.
+          # Bump manually after vetting the upstream changelog.
+          version: v2.15.4
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

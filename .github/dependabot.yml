@@ -1,0 +1,30 @@
+version: 2
+# Dependabot is configured to open update PRs for the SHA-pinned actions in
+# our workflows. The cooldown forces a 7-day wait after a new release before
+# a bump PR is opened, leaving a window for compromised releases to be
+# spotted by the wider community before we adopt them.
+#
+# Note: cooldown applies only to version updates, not security advisories
+# (those are surfaced immediately). It also does NOT cover the GoReleaser
+# binary version pinned via `with: version:` in release.yml — that field
+# is an action input, not a managed reference, and must be bumped by hand.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
