@@ -27,7 +27,7 @@ var expectedReadonlyCommands = map[string][]string{
 var forbiddenReadonlyCommands = []string{"raw"}
 
 func TestReadonlyBuildHasNoWriteCommands(t *testing.T) {
-	app := NewApp()
+	app := NewApp("")
 	got := map[string][]string{}
 	for _, cmd := range app.Commands {
 		for _, bad := range forbiddenReadonlyCommands {

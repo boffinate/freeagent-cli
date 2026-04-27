@@ -16,7 +16,7 @@ func TestExpensesList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "expenses", "list",
 			"--user", "7", "--project", "5", "--from", "2026-01-01",
 		})

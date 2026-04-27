@@ -16,7 +16,7 @@ func TestBillsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "bills", "list",
 			"--from", "2026-01-01", "--contact", "1",
 		})
@@ -46,7 +46,7 @@ func TestBillsGet(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bills", "get", "--id", "100"})
+		return NewApp("").Run([]string{"freeagent", "bills", "get", "--id", "100"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -66,7 +66,7 @@ func TestBillsGetRequiresIdentifier(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bills", "get"})
+		return NewApp("").Run([]string{"freeagent", "bills", "get"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "id or url") {
 		t.Errorf("expected id-or-url error, got %v", err)

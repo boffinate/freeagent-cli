@@ -15,7 +15,7 @@ func TestCompanyShow(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "company", "show"})
+		return NewApp("").Run([]string{"freeagent", "company", "show"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -35,7 +35,7 @@ func TestUsersList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "users", "list"})
+		return NewApp("").Run([]string{"freeagent", "users", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -54,7 +54,7 @@ func TestUsersMe(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "users", "me"})
+		return NewApp("").Run([]string{"freeagent", "users", "me"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -74,7 +74,7 @@ func TestPriceListItemsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "price-list-items", "list"})
+		return NewApp("").Run([]string{"freeagent", "price-list-items", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -93,7 +93,7 @@ func TestStockItemsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "stock-items", "list"})
+		return NewApp("").Run([]string{"freeagent", "stock-items", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -111,7 +111,7 @@ func TestCategoriesList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "categories", "list"})
+		return NewApp("").Run([]string{"freeagent", "categories", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)

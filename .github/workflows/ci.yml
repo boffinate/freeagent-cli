@@ -5,13 +5,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
       - name: Build full binary
-        run: go build ./cmd/freeagent
+        run: make build
       - name: Build readonly binary
-        run: go build -tags readonly ./cmd/freeagent
+        run: make build-ro
       - name: Default-build tests
         run: go test ./...
       - name: Readonly-build tests

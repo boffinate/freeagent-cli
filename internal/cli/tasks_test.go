@@ -15,7 +15,7 @@ func TestTasksList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "tasks", "list", "--project", "5"})
+		return NewApp("").Run([]string{"freeagent", "tasks", "list", "--project", "5"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
