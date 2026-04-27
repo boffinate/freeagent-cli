@@ -11,3 +11,6 @@
 *.dll
 *.so
 *.dylib
+
+# e2e harness — local sandbox token files copied here are never committed
+/.e2e/

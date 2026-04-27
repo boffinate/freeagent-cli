@@ -228,6 +228,21 @@ Bank transactions (bulk approve):
 - Default API base URL is production; use `--sandbox` for the sandbox API.
 - Use `--json` to print raw JSON for automation or piping into other tools.
 
+## End-to-end tests
+
+This repo ships an opt-in end-to-end harness that drives the CLI's HTTP
+client against a real FreeAgent sandbox account. It is gated behind the
+`e2e` build tag, skips automatically when its env vars are unset, and is
+invoked via:
+
+```bash
+make test-e2e
+make test-e2e-ro
+```
+
+See [`docs/e2e.md`](docs/e2e.md) for sandbox provisioning and env-var
+setup.
+
 ## License
 
 MIT. See `LICENSE`.
