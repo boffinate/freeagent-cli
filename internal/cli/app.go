@@ -58,6 +58,7 @@ func NewApp(version string) *cli.App {
 			stockItemsCommand(),
 			tasksCommand(),
 			timeslipsCommand(),
+			transactionsCommand(),
 			usersCommand(),
 			versionCommand(version),
 		}, writeCommands()...),

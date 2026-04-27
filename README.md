@@ -212,6 +212,14 @@ Bills, expenses, credit notes (read):
 ./freeagent credit-notes list --contact CONTACT_ID
 ```
 
+Accounting transactions (ledger entries — distinct from bank transactions):
+
+```bash
+./freeagent transactions list --from-date 2026-01-01 --to-date 2026-03-31
+./freeagent transactions list --nominal-code 750-1
+./freeagent transactions get --id TRANSACTION_ID
+```
+
 Bank transactions (bulk approve):
 
 ```bash
