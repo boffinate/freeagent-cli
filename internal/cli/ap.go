@@ -47,19 +47,12 @@ func apPracticeShow(c *cli.Context) error {
 		if err := json.Unmarshal(resp, &decoded); err != nil {
 			return err
 		}
-		// The docs show an unwrapped response ({"name": ..., "subdomain": ...})
-		// but tolerate a wrapped {"practice": {...}} variant in case the API
-		// normalises later.
-		fields := decoded
-		if wrapped, ok := decoded["practice"].(map[string]any); ok {
-			fields = wrapped
-		}
-		if fields == nil {
+		if decoded == nil {
 			fmt.Fprintln(os.Stdout, string(resp))
 			return nil
 		}
-		fmt.Fprintf(os.Stdout, "Name:      %v\n", fields["name"])
-		fmt.Fprintf(os.Stdout, "Subdomain: %v\n", fields["subdomain"])
+		fmt.Fprintf(os.Stdout, "Name:      %v\n", decoded["name"])
+		fmt.Fprintf(os.Stdout, "Subdomain: %v\n", decoded["subdomain"])
 		return nil
 	})
 }
