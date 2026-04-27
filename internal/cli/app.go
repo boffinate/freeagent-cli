@@ -56,6 +56,7 @@ func NewApp() *cli.App {
 			stockItemsCommand(),
 			tasksCommand(),
 			timeslipsCommand(),
+			transactionsCommand(),
 			usersCommand(),
 		}, writeCommands()...),
 	}

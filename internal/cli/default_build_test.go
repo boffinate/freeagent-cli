@@ -21,6 +21,7 @@ var expectedFullCommands = map[string][]string{
 	"stock-items":      {"list", "get"},
 	"tasks":            {"list", "get"},
 	"timeslips":        {"list", "get"},
+	"transactions":     {"list", "get"},
 	"users":            {"list", "get", "me"},
 	"raw":              nil,
 }
