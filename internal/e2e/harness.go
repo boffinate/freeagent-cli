@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -56,6 +57,15 @@ const (
 	refreshSkew = 5 * time.Minute
 )
 
+// allowedE2EHosts is the closed set of hosts the e2e harness will target.
+// Production (api.freeagent.com) is deliberately absent: the harness creates
+// and deletes resources, and a fat-fingered FREEAGENT_E2E_BASE_URL must not
+// be able to mutate real customer data. Mirrors the philosophy of the
+// readonly binary's hardcoded host allowlist in safemode_readonly.go.
+var allowedE2EHosts = map[string]struct{}{
+	"api.sandbox.freeagent.com": {},
+}
+
 // Harness bundles everything an e2e test needs: a configured *freeagent.Client
 // that will refresh tokens automatically, the resolved base URL for sanity
 // asserts, and a Cleanup slice that tests can append created-resource URLs to
@@ -77,11 +87,23 @@ func bootstrap(tokenFile, clientID, clientSecret, baseURL string) (*Harness, err
 		baseURL = DefaultBaseURL
 	}
 
+	parsed, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse %s=%q: %w", EnvBaseURL, baseURL, err)
+	}
+	if _, ok := allowedE2EHosts[parsed.Host]; !ok {
+		return nil, fmt.Errorf("e2e harness refuses non-sandbox host %q (set %s to a sandbox URL such as %s)", parsed.Host, EnvBaseURL, DefaultBaseURL)
+	}
+
 	store, err := newSingleFileStore(tokenFile)
 	if err != nil {
 		return nil, fmt.Errorf("token store: %w", err)
 	}
 
+	// HTTP is intentionally left nil so Client.httpClient() falls back to the
+	// build-tagged defaultHTTPClient(). Under -tags readonly that returns a
+	// client with the CheckRedirect guard wired up, so a 30x to a disallowed
+	// host is refused at redirect time as well as pre-flight.
 	client := &freeagent.Client{
 		BaseURL:      baseURL,
 		UserAgent:    "freeagent-cli-e2e/0.1",
@@ -89,7 +111,6 @@ func bootstrap(tokenFile, clientID, clientSecret, baseURL string) (*Harness, err
 		ClientSecret: clientSecret,
 		Profile:      e2eProfile,
 		Store:        store,
-		HTTP:         &http.Client{Timeout: 30 * time.Second},
 	}
 
 	// AccessToken() refreshes inside a 1-minute window; we want a wider
