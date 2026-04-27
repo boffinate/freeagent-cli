@@ -273,6 +273,66 @@ func TestAPClientsList_Empty(t *testing.T) {
 	}
 }
 
+func TestSubdomainFlag_InjectsHeader(t *testing.T) {
+	var gotSubdomain string
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotSubdomain = r.Header.Get("X-Subdomain")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"contacts":[]}`))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "--subdomain", "acme", "contacts", "list"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotSubdomain != "acme" {
+		t.Errorf("X-Subdomain = %q, want %q", gotSubdomain, "acme")
+	}
+}
+
+func TestSubdomainFlag_AliasClient(t *testing.T) {
+	var gotSubdomain string
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotSubdomain = r.Header.Get("X-Subdomain")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"contacts":[]}`))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "--client", "globex", "contacts", "list"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotSubdomain != "globex" {
+		t.Errorf("X-Subdomain = %q (via --client), want %q", gotSubdomain, "globex")
+	}
+}
+
+func TestSubdomainFlag_AbsentByDefault(t *testing.T) {
+	var hadHeader bool
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		_, hadHeader = r.Header["X-Subdomain"]
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"contacts":[]}`))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "contacts", "list"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if hadHeader {
+		t.Errorf("X-Subdomain header should not be set when --subdomain is unused")
+	}
+}
+
 func TestAPAccountManagersShow_RequiresIDOrURL(t *testing.T) {
 	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("server should not be hit when neither --id nor --url is set")
