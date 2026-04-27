@@ -103,6 +103,10 @@ func billsCreate(c *cli.Context) error {
 			return fmt.Errorf("%s is required (set via flag or --body)", field)
 		}
 	}
+	items, _ := bill["bill_items"].([]any)
+	if len(items) == 0 {
+		return fmt.Errorf("bill_items is required (set via --items or --body) and must contain at least one item")
+	}
 
 	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/bills", map[string]any{"bill": bill})
 	if err != nil {

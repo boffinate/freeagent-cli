@@ -61,6 +61,9 @@ func TestBillsCreateFlagsOverrideBody(t *testing.T) {
 			"reference": "OLD",
 			"dated_on":  "2026-01-01",
 			"due_on":    "2026-02-01",
+			"bill_items": []any{
+				map[string]any{"description": "Line", "total_value": "100.00", "category": "https://api.sandbox.freeagent.com/v2/categories/285"},
+			},
 		},
 	})
 
@@ -103,6 +106,28 @@ func TestBillsCreateRejectsMissingRequired(t *testing.T) {
 	})
 	if err == nil || !strings.Contains(err.Error(), "is required") {
 		t.Errorf("expected required-field error, got %v", err)
+	}
+}
+
+func TestBillsCreateRejectsMissingItems(t *testing.T) {
+	bodyFile := writeTempJSON(t, map[string]any{
+		"bill": map[string]any{
+			"contact":   "https://api.sandbox.freeagent.com/v2/contacts/1",
+			"reference": "REF",
+			"dated_on":  "2026-04-01",
+			"due_on":    "2026-05-01",
+		},
+	})
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "bills", "create", "--body", bodyFile})
+	})
+	if err == nil || !strings.Contains(err.Error(), "bill_items is required") {
+		t.Errorf("expected bill_items error, got %v", err)
 	}
 }
 

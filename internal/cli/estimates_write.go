@@ -21,7 +21,172 @@ func estimatesWriteSubcommands() []*cli.Command {
 		estimatesSendCmd(),
 		estimatesTransitionCmd(),
 		estimatesDuplicateCmd(),
+		estimateItemsCmd(),
 	}
+}
+
+func estimateItemsCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "items",
+		Usage: "Manage individual estimate line items",
+		Subcommands: []*cli.Command{
+			{
+				Name:  "create",
+				Usage: "Add a line item to an estimate",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "estimate", Required: true, Usage: "Estimate ID or URL the item belongs to"},
+					&cli.StringFlag{Name: "description", Usage: "Item description (overrides body)"},
+					&cli.StringFlag{Name: "price", Usage: "Unit price (overrides body)"},
+					&cli.StringFlag{Name: "item-type", Usage: "Item type (Hours, Days, Products, Services, Months, Years) (overrides body)"},
+					&cli.StringFlag{Name: "quantity", Usage: "Quantity (overrides body)"},
+					&cli.StringFlag{Name: "category", Usage: "Category URL (overrides body)"},
+					&cli.StringFlag{Name: "body", Usage: "JSON file with estimate_item payload or estimate_item object"},
+				},
+				Action: estimateItemsCreate,
+			},
+			{
+				Name:  "update",
+				Usage: "Update an estimate line item",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "id", Usage: "Estimate item ID"},
+					&cli.StringFlag{Name: "url", Usage: "Estimate item URL"},
+					&cli.StringFlag{Name: "description", Usage: "Item description (overrides body)"},
+					&cli.StringFlag{Name: "price", Usage: "Unit price (overrides body)"},
+					&cli.StringFlag{Name: "item-type", Usage: "Item type (overrides body)"},
+					&cli.StringFlag{Name: "quantity", Usage: "Quantity (overrides body)"},
+					&cli.StringFlag{Name: "category", Usage: "Category URL (overrides body)"},
+					&cli.StringFlag{Name: "body", Usage: "JSON file with estimate_item payload or estimate_item object"},
+				},
+				Action: estimateItemsUpdate,
+			},
+			{
+				Name:  "delete",
+				Usage: "Delete an estimate line item",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "id", Usage: "Estimate item ID"},
+					&cli.StringFlag{Name: "url", Usage: "Estimate item URL"},
+					&cli.BoolFlag{Name: "yes", Usage: "Skip confirmation prompt"},
+				},
+				Action: estimateItemsDelete,
+			},
+		},
+	}
+}
+
+func estimateItemsCreate(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+	estimateURL, err := normalizeResourceURL(profile.BaseURL, "estimates", c.String("estimate"))
+	if err != nil {
+		return err
+	}
+	item, err := loadResourceObject(c.String("body"), "estimate_item")
+	if err != nil {
+		return err
+	}
+	for _, m := range []struct {
+		flag, key string
+	}{
+		{"description", "description"},
+		{"price", "price"},
+		{"item-type", "item_type"},
+		{"quantity", "quantity"},
+		{"category", "category"},
+	} {
+		if v := strings.TrimSpace(c.String(m.flag)); v != "" {
+			item[m.key] = v
+		}
+	}
+	for _, field := range []string{"description", "price", "item_type"} {
+		if _, ok := item[field]; !ok {
+			return fmt.Errorf("%s is required (set via flag or --body)", field)
+		}
+	}
+	payload := map[string]any{
+		"estimate":      estimateURL,
+		"estimate_item": item,
+	}
+	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/estimate_items", payload)
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		created, _ := decoded["estimate_item"].(map[string]any)
+		if created == nil {
+			fmt.Fprintln(os.Stdout, "Estimate item created")
+			return nil
+		}
+		fmt.Fprintf(os.Stdout, "Created estimate item %v\n", created["url"])
+		return nil
+	})
+}
+
+func estimateItemsUpdate(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+	path, err := requireIDOrURL(profile.BaseURL, "estimate_items", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+	item, err := loadResourceObject(c.String("body"), "estimate_item")
+	if err != nil {
+		return err
+	}
+	for _, m := range []struct {
+		flag, key string
+	}{
+		{"description", "description"},
+		{"price", "price"},
+		{"item-type", "item_type"},
+		{"quantity", "quantity"},
+		{"category", "category"},
+	} {
+		if v := strings.TrimSpace(c.String(m.flag)); v != "" {
+			item[m.key] = v
+		}
+	}
+	if len(item) == 0 {
+		return fmt.Errorf("at least one field is required to update (set via flag or --body)")
+	}
+	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPut, path, map[string]any{"estimate_item": item})
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		fmt.Fprintf(os.Stdout, "Updated estimate item %s\n", path)
+		return nil
+	})
+}
+
+func estimateItemsDelete(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+	path, err := requireIDOrURL(profile.BaseURL, "estimate_items", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+	if !c.Bool("yes") && !confirmDelete("estimate item", path) {
+		fmt.Fprintln(os.Stdout, "Cancelled")
+		return nil
+	}
+	resp, _, _, err := client.Do(context.Background(), http.MethodDelete, path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		fmt.Fprintf(os.Stdout, "Deleted estimate item %s\n", path)
+		return nil
+	})
 }
 
 func estimatesCreateCmd() *cli.Command {
@@ -34,6 +199,8 @@ func estimatesCreateCmd() *cli.Command {
 			&cli.StringFlag{Name: "reference", Usage: "Reference (overrides body)"},
 			&cli.StringFlag{Name: "dated-on", Usage: "Date YYYY-MM-DD (overrides body)"},
 			&cli.StringFlag{Name: "currency", Usage: "Currency code (overrides body)"},
+			&cli.StringFlag{Name: "status", Usage: "Estimate status (Draft, Sent, Approved, etc.) (overrides body)"},
+			&cli.StringFlag{Name: "estimate-type", Usage: "Estimate type (Estimate, Quote, Proposal) (overrides body)"},
 			&cli.StringFlag{Name: "items", Usage: "JSON file with estimate_items array (overrides body)"},
 		},
 		Action: estimatesCreate,
@@ -134,6 +301,12 @@ func estimatesCreate(c *cli.Context) error {
 	if v := strings.TrimSpace(c.String("currency")); v != "" {
 		estimate["currency"] = v
 	}
+	if v := strings.TrimSpace(c.String("status")); v != "" {
+		estimate["status"] = v
+	}
+	if v := strings.TrimSpace(c.String("estimate-type")); v != "" {
+		estimate["estimate_type"] = v
+	}
 	if itemsPath := c.String("items"); itemsPath != "" {
 		items, err := loadItemsArray(itemsPath, "estimate_items")
 		if err != nil {
@@ -141,8 +314,10 @@ func estimatesCreate(c *cli.Context) error {
 		}
 		estimate["estimate_items"] = items
 	}
-	if _, ok := estimate["contact"]; !ok {
-		return fmt.Errorf("contact is required (set via flag or --body)")
+	for _, field := range []string{"contact", "reference", "dated_on", "currency", "status", "estimate_type"} {
+		if _, ok := estimate[field]; !ok {
+			return fmt.Errorf("%s is required (set via flag or --body)", field)
+		}
 	}
 
 	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/estimates", map[string]any{"estimate": estimate})

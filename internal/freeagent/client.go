@@ -26,6 +26,7 @@ type Client struct {
 	ClientSecret string
 	RedirectURI  string
 	Profile      string
+	Subdomain    string
 	Store        storage.TokenStore
 	HTTP         *http.Client
 }
@@ -250,6 +251,9 @@ func (c *Client) doRequest(ctx context.Context, method, urlStr string, body []by
 		}
 		if accessToken != "" {
 			req.Header.Set("Authorization", "Bearer "+accessToken)
+		}
+		if c.Subdomain != "" {
+			req.Header.Set("X-Subdomain", c.Subdomain)
 		}
 
 		resp, err := c.httpClient().Do(req)
