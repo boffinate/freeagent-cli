@@ -27,6 +27,10 @@ import (
 	"github.com/anjor/freeagent-cli/internal/storage"
 )
 
+// Compile-time guard: singleFileStore must satisfy storage.TokenStore so
+// the harness's *freeagent.Client can use it. Catches drift at build time.
+var _ storage.TokenStore = (*singleFileStore)(nil)
+
 // Environment-variable names that drive the harness. Kept as exported
 // constants so docs and follow-up tests can reference them by symbol.
 const (
@@ -64,31 +68,18 @@ type Harness struct {
 	Cleanup []string
 }
 
-// NewHarness builds a *Harness for the given test. If any required env var
-// is missing it calls t.Skip — never t.Fatal — so the suite degrades to a
-// no-op for contributors without sandbox credentials. The returned Harness
-// is ready to issue authenticated calls; the access token is refreshed
-// eagerly if it expires within refreshSkew.
-func NewHarness(t *testing.T) *Harness {
-	t.Helper()
-
-	tokenFile := os.Getenv(EnvTokenFile)
-	clientID := os.Getenv(EnvClientID)
-	clientSecret := os.Getenv(EnvClientSecret)
-	baseURL := os.Getenv(EnvBaseURL)
+// bootstrap builds a *Harness from the given configuration without any
+// *testing.T plumbing. Used by both NewHarness (per-test) and TestMain
+// (suite-level entry/exit sweep). The access token is refreshed eagerly
+// if it expires within refreshSkew.
+func bootstrap(tokenFile, clientID, clientSecret, baseURL string) (*Harness, error) {
 	if baseURL == "" {
 		baseURL = DefaultBaseURL
 	}
 
-	if tokenFile == "" || clientID == "" || clientSecret == "" {
-		t.Skipf("e2e harness disabled: set %s, %s, %s (and optionally %s) to enable",
-			EnvTokenFile, EnvClientID, EnvClientSecret, EnvBaseURL)
-		return nil
-	}
-
 	store, err := newSingleFileStore(tokenFile)
 	if err != nil {
-		t.Fatalf("e2e: prepare token store: %v", err)
+		return nil, fmt.Errorf("token store: %w", err)
 	}
 
 	client := &freeagent.Client{
@@ -101,35 +92,52 @@ func NewHarness(t *testing.T) *Harness {
 		HTTP:         &http.Client{Timeout: 30 * time.Second},
 	}
 
-	// Eager refresh: AccessToken() refreshes inside a 1-minute window;
-	// for the e2e suite we want a wider safety margin so a 14-minute test
-	// run doesn't trip an expiry mid-flight. We replicate the check here
-	// and force a refresh through the same client path so the new token
-	// is written back to disk via the store.
+	// AccessToken() refreshes inside a 1-minute window; we want a wider
+	// safety margin so a 14-minute test run doesn't trip mid-flight.
 	stored, err := store.Get(e2eProfile)
 	if err != nil {
-		t.Fatalf("e2e: load token from %s: %v", tokenFile, err)
+		return nil, fmt.Errorf("read token: %w", err)
 	}
 	if !stored.ExpiresAt.IsZero() && time.Until(stored.ExpiresAt) < refreshSkew && stored.RefreshToken != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		refreshed, err := client.Refresh(ctx, stored.RefreshToken)
 		if err != nil {
-			t.Fatalf("e2e: proactive refresh failed: %v", err)
+			return nil, fmt.Errorf("proactive refresh: %w", err)
 		}
 		if refreshed.RefreshToken == "" {
 			refreshed.RefreshToken = stored.RefreshToken
 		}
 		if err := store.Set(e2eProfile, refreshed); err != nil {
-			t.Fatalf("e2e: persist refreshed token: %v", err)
+			return nil, fmt.Errorf("persist refreshed token: %w", err)
 		}
 	}
 
-	h := &Harness{Client: client, BaseURL: baseURL}
+	return &Harness{Client: client, BaseURL: baseURL}, nil
+}
+
+// NewHarness builds a *Harness for the given test. If any required env var
+// is missing it calls t.Skip — never t.Fatal — so the suite degrades to a
+// no-op for contributors without sandbox credentials.
+func NewHarness(t *testing.T) *Harness {
+	t.Helper()
+
+	tokenFile := os.Getenv(EnvTokenFile)
+	clientID := os.Getenv(EnvClientID)
+	clientSecret := os.Getenv(EnvClientSecret)
+	if tokenFile == "" || clientID == "" || clientSecret == "" {
+		t.Skipf("e2e harness disabled: set %s, %s, %s (and optionally %s) to enable",
+			EnvTokenFile, EnvClientID, EnvClientSecret, EnvBaseURL)
+		return nil
+	}
+
+	h, err := bootstrap(tokenFile, clientID, clientSecret, os.Getenv(EnvBaseURL))
+	if err != nil {
+		t.Fatalf("e2e bootstrap: %v", err)
+	}
 
 	// Per-test cleanup: best-effort delete of any URL the test registered.
-	// We log failures rather than failing the test — leftover resources
-	// will be caught by the next Sweep on entry/exit.
+	// Leftover resources will be caught by the next Sweep on entry/exit.
 	t.Cleanup(func() {
 		h.mu.Lock()
 		urls := append([]string(nil), h.Cleanup...)
