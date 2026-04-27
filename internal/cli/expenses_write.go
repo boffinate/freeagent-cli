@@ -34,6 +34,8 @@ func expensesCreateCmd() *cli.Command {
 			&cli.StringFlag{Name: "currency", Usage: "Currency code (overrides body)"},
 			&cli.StringFlag{Name: "description", Usage: "Description (overrides body)"},
 			&cli.StringFlag{Name: "project", Usage: "Project ID or URL (overrides body)"},
+			&cli.StringFlag{Name: "mileage", Usage: "Miles travelled (required when category is Mileage)"},
+			&cli.StringFlag{Name: "vehicle-type", Usage: "Vehicle type, e.g. Car, Motorcycle, Bicycle (required when category is Mileage)"},
 		},
 		Action: expensesCreate,
 	}
@@ -113,13 +115,25 @@ func expensesCreate(c *cli.Context) error {
 		}
 		expense["project"] = resolved
 	}
+	if v := strings.TrimSpace(c.String("mileage")); v != "" {
+		expense["mileage"] = v
+	}
+	if v := strings.TrimSpace(c.String("vehicle-type")); v != "" {
+		expense["vehicle_type"] = v
+	}
 
-	for _, field := range []string{"user", "category", "dated_on"} {
+	for _, field := range []string{"user", "category", "dated_on", "description"} {
 		if _, ok := expense[field]; !ok {
 			return fmt.Errorf("%s is required (set via flag or --body)", field)
 		}
 	}
-	if cat, _ := expense["category"].(string); !strings.EqualFold(cat, "Mileage") {
+	if cat, _ := expense["category"].(string); strings.EqualFold(cat, "Mileage") {
+		for _, field := range []string{"mileage", "vehicle_type"} {
+			if _, ok := expense[field]; !ok {
+				return fmt.Errorf("%s is required when category is Mileage", field)
+			}
+		}
+	} else {
 		if _, ok := expense["gross_value"]; !ok {
 			return fmt.Errorf("gross_value is required when category is not Mileage")
 		}
@@ -181,15 +195,9 @@ func expensesDelete(c *cli.Context) error {
 		return err
 	}
 
-	if !c.Bool("yes") {
-		fmt.Fprintf(os.Stdout, "Delete expense %s? (y/N): ", path)
-		var answer string
-		_, _ = fmt.Fscanln(os.Stdin, &answer)
-		answer = strings.TrimSpace(strings.ToLower(answer))
-		if answer != "y" && answer != "yes" {
-			fmt.Fprintln(os.Stdout, "Cancelled")
-			return nil
-		}
+	if !c.Bool("yes") && !confirmDelete("expense", path) {
+		fmt.Fprintln(os.Stdout, "Cancelled")
+		return nil
 	}
 
 	resp, _, _, err := client.Do(context.Background(), http.MethodDelete, path, nil, "")

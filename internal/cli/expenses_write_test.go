@@ -17,6 +17,7 @@ func TestExpensesCreateFromBody(t *testing.T) {
 			"category":    "https://api.sandbox.freeagent.com/v2/categories/285",
 			"dated_on":    "2026-04-01",
 			"gross_value": "12.50",
+			"description": "Lunch",
 		},
 	})
 
@@ -64,6 +65,9 @@ func TestExpensesCreateFlags(t *testing.T) {
 			"--user", "1",
 			"--category", "Mileage",
 			"--dated-on", "2026-04-01",
+			"--description", "Client visit",
+			"--mileage", "42.0",
+			"--vehicle-type", "Car",
 		})
 	})
 	if err != nil {
@@ -75,6 +79,29 @@ func TestExpensesCreateFlags(t *testing.T) {
 	}
 	if exp["category"] != "Mileage" {
 		t.Errorf("Mileage category not preserved: %#v", exp)
+	}
+	if exp["mileage"] != "42.0" || exp["vehicle_type"] != "Car" {
+		t.Errorf("mileage fields missing: %#v", exp)
+	}
+}
+
+func TestExpensesCreateMileageRequiresVehicleFields(t *testing.T) {
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{
+			"freeagent", "expenses", "create",
+			"--user", "1",
+			"--category", "Mileage",
+			"--dated-on", "2026-04-01",
+			"--description", "Client visit",
+		})
+	})
+	if err == nil || !strings.Contains(err.Error(), "mileage") {
+		t.Errorf("expected mileage error, got %v", err)
 	}
 }
 
@@ -90,6 +117,7 @@ func TestExpensesCreateRequiresGrossValueWhenNotMileage(t *testing.T) {
 			"--user", "1",
 			"--category", "285",
 			"--dated-on", "2026-04-01",
+			"--description", "Lunch",
 		})
 	})
 	if err == nil || !strings.Contains(err.Error(), "gross_value") {

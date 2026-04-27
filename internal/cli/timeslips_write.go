@@ -186,15 +186,9 @@ func timeslipsDelete(c *cli.Context) error {
 		return err
 	}
 
-	if !c.Bool("yes") {
-		fmt.Fprintf(os.Stdout, "Delete timeslip %s? (y/N): ", path)
-		var answer string
-		_, _ = fmt.Fscanln(os.Stdin, &answer)
-		answer = strings.TrimSpace(strings.ToLower(answer))
-		if answer != "y" && answer != "yes" {
-			fmt.Fprintln(os.Stdout, "Cancelled")
-			return nil
-		}
+	if !c.Bool("yes") && !confirmDelete("timeslip", path) {
+		fmt.Fprintln(os.Stdout, "Cancelled")
+		return nil
 	}
 
 	resp, _, _, err := client.Do(context.Background(), http.MethodDelete, path, nil, "")

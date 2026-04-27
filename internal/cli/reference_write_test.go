@@ -28,6 +28,8 @@ func TestPriceListItemsCreate(t *testing.T) {
 			"--code", "WIDGET",
 			"--description", "Widget",
 			"--price", "9.99",
+			"--quantity", "1",
+			"--item-type", "Products",
 		})
 	})
 	if err != nil {
@@ -39,6 +41,9 @@ func TestPriceListItemsCreate(t *testing.T) {
 	item, _ := gotBody["price_list_item"].(map[string]any)
 	if item["code"] != "WIDGET" || item["price"] != "9.99" {
 		t.Errorf("body: %#v", item)
+	}
+	if item["quantity"] != "1" || item["item_type"] != "Products" {
+		t.Errorf("body missing quantity/item_type: %#v", item)
 	}
 	if !strings.Contains(out, "WIDGET") {
 		t.Errorf("output: %q", out)

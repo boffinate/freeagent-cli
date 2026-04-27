@@ -179,11 +179,7 @@ func invoiceDelete(c *cli.Context) error {
 		if reference != "" {
 			label = fmt.Sprintf("%s (%s)", reference, path)
 		}
-		fmt.Fprintf(os.Stdout, "Delete invoice %s? (y/N): ", label)
-		var answer string
-		_, _ = fmt.Fscanln(os.Stdin, &answer)
-		answer = strings.TrimSpace(strings.ToLower(answer))
-		if answer != "y" && answer != "yes" {
+		if !confirmDelete("invoice", label) {
 			fmt.Fprintln(os.Stdout, "Cancelled")
 			return nil
 		}

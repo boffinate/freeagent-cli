@@ -30,6 +30,8 @@ func priceListItemsCreateCmd() *cli.Command {
 			&cli.StringFlag{Name: "code", Usage: "Item code (overrides body)"},
 			&cli.StringFlag{Name: "description", Usage: "Description (overrides body)"},
 			&cli.StringFlag{Name: "price", Usage: "Price (overrides body)"},
+			&cli.StringFlag{Name: "quantity", Usage: "Item quantity (overrides body)"},
+			&cli.StringFlag{Name: "item-type", Usage: "Item type, e.g. Hours, Days, Products, Services (overrides body)"},
 			&cli.StringFlag{Name: "sales-tax-rate", Usage: "Sales tax rate, e.g. 20.0 (overrides body)"},
 		},
 		Action: priceListItemsCreate,
@@ -80,11 +82,19 @@ func priceListItemsCreate(c *cli.Context) error {
 	if v := strings.TrimSpace(c.String("price")); v != "" {
 		item["price"] = v
 	}
+	if v := strings.TrimSpace(c.String("quantity")); v != "" {
+		item["quantity"] = v
+	}
+	if v := strings.TrimSpace(c.String("item-type")); v != "" {
+		item["item_type"] = v
+	}
 	if v := strings.TrimSpace(c.String("sales-tax-rate")); v != "" {
 		item["sales_tax_rate"] = v
 	}
-	if len(item) == 0 {
-		return fmt.Errorf("at least one field is required (set via flag or --body)")
+	for _, field := range []string{"code", "quantity", "item_type", "description", "price"} {
+		if _, ok := item[field]; !ok {
+			return fmt.Errorf("%s is required (set via flag or --body)", field)
+		}
 	}
 	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/price_list_items", map[string]any{"price_list_item": item})
 	if err != nil {
