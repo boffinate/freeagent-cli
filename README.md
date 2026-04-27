@@ -232,10 +232,21 @@ Bank transactions (bulk approve):
 ./freeagent bank approve --ids ./explanation-ids.txt --ids-type explanation
 ```
 
+Version and update check:
+
+```bash
+./freeagent version              # print version + os/arch, no network call
+./freeagent version --check      # compare to latest GitHub release (24h cache)
+./freeagent version --check --force  # bypass cache
+```
+
+`--check` skips the network entirely on dev / non-tagged builds.
+
 ## Files
 
 - Config: `~/.config/freeagent/config.json`
 - Tokens (fallback): `~/.config/freeagent/tokens/PROFILE.json`
+- Update-check cache: `$XDG_CONFIG_HOME/freeagent/update-check.json`
 
 ## Notes
 

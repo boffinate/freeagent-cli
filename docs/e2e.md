@@ -57,6 +57,11 @@ export FREEAGENT_E2E_CLIENT_SECRET="YOUR_SANDBOX_CLIENT_SECRET"
 export FREEAGENT_E2E_BASE_URL="https://api.sandbox.freeagent.com/v2"
 ```
 
+`FREEAGENT_E2E_BASE_URL` is restricted to `api.sandbox.freeagent.com`
+by a hardcoded allowlist in the harness. Any other host (including
+production) is refused at bootstrap so a fat-fingered env var cannot
+mutate real customer data.
+
 If the access token is within five minutes of expiring, the harness
 refreshes it on startup and writes the new token back to the same file.
 
@@ -72,17 +77,17 @@ helpers stamp every record with an `e2e-<unix-ts>-<uuid>-<test>` prefix;
 on entry and exit the suite sweeps stale `e2e-`-prefixed resources so a
 crashed previous run doesn't leave litter.
 
-## What ships in this PR vs. follow-ups
+## Current scope
 
-This PR lays the harness only:
+The harness today provides:
 
 - env-var contract, token-file auth bootstrap, proactive refresh,
 - fixture-prefix helper,
-- contacts sweep,
+- contacts sweep (single page; pagination follows when CRUD coverage
+  lands),
 - Makefile targets,
 - smoke tests that prove the build wires cleanly without sandbox creds.
 
 Per-command-group coverage (contacts CRUD, invoices CRUD, all read-only
 smoke calls, the readonly tripwire suite, and sweeps for the other
-resource types) lands in subsequent PRs against issue #8 once a sandbox
-account is provisioned.
+resource types) is tracked under issue #8.
