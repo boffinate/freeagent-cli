@@ -177,6 +177,53 @@ func printOrJSON(rt Runtime, raw []byte, fallback func() error) error {
 	return fallback()
 }
 
+// loadResourceObject reads a JSON file at bodyPath and returns the inner
+// resource object (e.g. the "bill" / "expense" map). If the file's top-level
+// object already contains a key matching wrapper, that value is returned;
+// otherwise the whole object is treated as the resource. An empty bodyPath
+// returns an empty map so callers can layer flag values on top.
+func loadResourceObject(bodyPath, wrapper string) (map[string]any, error) {
+	if bodyPath == "" {
+		return map[string]any{}, nil
+	}
+	data, err := os.ReadFile(bodyPath)
+	if err != nil {
+		return nil, err
+	}
+	var decoded map[string]any
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return nil, err
+	}
+	if inner, ok := decoded[wrapper].(map[string]any); ok {
+		return inner, nil
+	}
+	return decoded, nil
+}
+
+// loadItemsArray reads a JSON file holding either {"<wrapper>": [...]} or a
+// bare top-level array, and returns the array. Used for line-items flags.
+func loadItemsArray(itemsPath, wrapper string) ([]any, error) {
+	data, err := os.ReadFile(itemsPath)
+	if err != nil {
+		return nil, err
+	}
+	var decoded any
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return nil, err
+	}
+	switch v := decoded.(type) {
+	case []any:
+		return v, nil
+	case map[string]any:
+		if items, ok := v[wrapper].([]any); ok {
+			return items, nil
+		}
+		return nil, fmt.Errorf("expected top-level array or %q key", wrapper)
+	default:
+		return nil, fmt.Errorf("expected JSON array or object with %q key", wrapper)
+	}
+}
+
 // requireIDOrURL resolves a flag pair (id, url) against a resource collection
 // for commands that accept either. Returns the absolute request path.
 func requireIDOrURL(baseURL, resource, id, urlValue string) (string, error) {

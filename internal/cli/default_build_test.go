@@ -8,7 +8,7 @@ var expectedFullCommands = map[string][]string{
 	"auth":             {"configure", "login", "status", "refresh", "logout"},
 	"ap":               {"practice"},
 	"bank":             {"accounts", "transactions", "explanations", "approve"},
-	"bills":            {"list", "get"},
+	"bills":            {"list", "get", "create", "update", "delete"},
 	"categories":       {"list"},
 	"company":          {"show"},
 	"contacts":         {"list", "search", "get", "create"},

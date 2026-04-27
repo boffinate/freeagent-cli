@@ -212,6 +212,16 @@ Bills, expenses, credit notes (read):
 ./freeagent credit-notes list --contact CONTACT_ID
 ```
 
+Bills (write — full binary only):
+
+```bash
+./freeagent bills create --body ./bill.json
+./freeagent bills create --contact CONTACT_ID --reference REF100 \
+  --dated-on 2026-04-01 --due-on 2026-05-01 --items ./bill-items.json
+./freeagent bills update --id BILL_ID --body ./bill-update.json
+./freeagent bills delete --id BILL_ID --yes
+```
+
 Accounting transactions (ledger entries — distinct from bank transactions):
 
 ```bash
