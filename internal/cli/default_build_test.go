@@ -20,7 +20,7 @@ var expectedFullCommands = map[string][]string{
 	"corporation-tax-returns": {"list", "get", "transition"},
 	"credit-notes":            {"list", "get", "create", "update", "delete", "send", "transition"},
 	"email-addresses":         {"list"},
-	"estimates":               {"list", "get", "create", "update", "delete", "send", "transition", "duplicate"},
+	"estimates":               {"list", "get", "create", "update", "delete", "send", "transition", "duplicate", "items"},
 	"expenses":                {"list", "get", "create", "update", "delete"},
 	"final-accounts-reports":  {"list", "get", "transition"},
 	"hire-purchases":          {"list", "get"},

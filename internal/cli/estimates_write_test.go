@@ -13,10 +13,12 @@ import (
 func TestEstimatesCreate(t *testing.T) {
 	bodyFile := writeTempJSON(t, map[string]any{
 		"estimate": map[string]any{
-			"contact":   "https://api.sandbox.freeagent.com/v2/contacts/1",
-			"reference": "EST-100",
-			"dated_on":  "2026-04-01",
-			"currency":  "GBP",
+			"contact":       "https://api.sandbox.freeagent.com/v2/contacts/1",
+			"reference":     "EST-100",
+			"dated_on":      "2026-04-01",
+			"currency":      "GBP",
+			"status":        "Draft",
+			"estimate_type": "Estimate",
 		},
 	})
 	var gotMethod, gotPath string
@@ -38,6 +40,152 @@ func TestEstimatesCreate(t *testing.T) {
 	}
 	if !strings.Contains(out, "EST-100") {
 		t.Errorf("output: %q", out)
+	}
+}
+
+func TestEstimateItemsCreate(t *testing.T) {
+	var gotMethod, gotPath string
+	var gotBody map[string]any
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &gotBody)
+		_, _ = w.Write([]byte(`{"estimate_item":{"url":"https://api.sandbox.freeagent.com/v2/estimate_items/2"}}`))
+	})
+	installTestHooks(t, srv)
+
+	out, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{
+			"freeagent", "estimates", "items", "create",
+			"--estimate", "9",
+			"--description", "Consulting",
+			"--price", "100.00",
+			"--item-type", "Hours",
+		})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotMethod != http.MethodPost || gotPath != "/v2/estimate_items" {
+		t.Errorf("got %s %s", gotMethod, gotPath)
+	}
+	if got := gotBody["estimate"]; got != "https://api.sandbox.freeagent.com/v2/estimates/9" {
+		t.Errorf("estimate URL: %#v", got)
+	}
+	item, _ := gotBody["estimate_item"].(map[string]any)
+	if item["description"] != "Consulting" || item["price"] != "100.00" || item["item_type"] != "Hours" {
+		t.Errorf("item: %#v", item)
+	}
+	if !strings.Contains(out, "/v2/estimate_items/2") {
+		t.Errorf("output: %q", out)
+	}
+}
+
+func TestEstimateItemsCreateRejectsMissingPrice(t *testing.T) {
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{
+			"freeagent", "estimates", "items", "create",
+			"--estimate", "9",
+			"--description", "Consulting",
+			"--item-type", "Hours",
+		})
+	})
+	if err == nil || !strings.Contains(err.Error(), "price is required") {
+		t.Errorf("expected price error, got %v", err)
+	}
+}
+
+func TestEstimateItemsUpdate(t *testing.T) {
+	var gotMethod, gotPath string
+	var gotBody map[string]any
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &gotBody)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{
+			"freeagent", "estimates", "items", "update",
+			"--id", "2",
+			"--price", "150.00",
+		})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotMethod != http.MethodPut || gotPath != "/v2/estimate_items/2" {
+		t.Errorf("got %s %s", gotMethod, gotPath)
+	}
+	item, _ := gotBody["estimate_item"].(map[string]any)
+	if item["price"] != "150.00" {
+		t.Errorf("price: %#v", item)
+	}
+}
+
+func TestEstimateItemsUpdateRequiresField(t *testing.T) {
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "estimates", "items", "update", "--id", "2"})
+	})
+	if err == nil || !strings.Contains(err.Error(), "at least one field") {
+		t.Errorf("expected at-least-one-field error, got %v", err)
+	}
+}
+
+func TestEstimateItemsDelete(t *testing.T) {
+	var gotMethod, gotPath string
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		w.WriteHeader(http.StatusOK)
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "estimates", "items", "delete", "--id", "2", "--yes"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotMethod != http.MethodDelete || gotPath != "/v2/estimate_items/2" {
+		t.Errorf("got %s %s", gotMethod, gotPath)
+	}
+}
+
+func TestEstimatesCreateRejectsMissingStatus(t *testing.T) {
+	bodyFile := writeTempJSON(t, map[string]any{
+		"estimate": map[string]any{
+			"contact":   "https://api.sandbox.freeagent.com/v2/contacts/1",
+			"reference": "EST-100",
+			"dated_on":  "2026-04-01",
+			"currency":  "GBP",
+		},
+	})
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "estimates", "create", "--body", bodyFile})
+	})
+	if err == nil || !strings.Contains(err.Error(), "status is required") {
+		t.Errorf("expected status error, got %v", err)
 	}
 }
 

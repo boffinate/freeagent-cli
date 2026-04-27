@@ -233,12 +233,13 @@ func buildContactPayload(c *cli.Context) (map[string]any, error) {
 		contact["country"] = country
 	}
 
-	if _, ok := contact["organisation_name"]; !ok {
-		first, _ := contact["first_name"].(string)
-		last, _ := contact["last_name"].(string)
-		if strings.TrimSpace(first) == "" && strings.TrimSpace(last) == "" {
-			return nil, fmt.Errorf("organisation or first-name/last-name required (or include in --body)")
-		}
+	org, _ := contact["organisation_name"].(string)
+	first, _ := contact["first_name"].(string)
+	last, _ := contact["last_name"].(string)
+	hasName := strings.TrimSpace(first) != "" && strings.TrimSpace(last) != ""
+	hasOrg := strings.TrimSpace(org) != ""
+	if !hasName && !hasOrg {
+		return nil, fmt.Errorf("either organisation_name or both first_name and last_name are required (set via flags or --body)")
 	}
 	return payload, nil
 }

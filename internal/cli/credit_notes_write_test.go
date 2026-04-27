@@ -13,10 +13,11 @@ import (
 func TestCreditNotesCreate(t *testing.T) {
 	bodyFile := writeTempJSON(t, map[string]any{
 		"credit_note": map[string]any{
-			"contact":   "https://api.sandbox.freeagent.com/v2/contacts/1",
-			"reference": "CN-001",
-			"dated_on":  "2026-04-01",
-			"currency":  "GBP",
+			"contact":               "https://api.sandbox.freeagent.com/v2/contacts/1",
+			"reference":             "CN-001",
+			"dated_on":              "2026-04-01",
+			"currency":              "GBP",
+			"payment_terms_in_days": 30,
 		},
 	})
 
@@ -46,6 +47,26 @@ func TestCreditNotesCreate(t *testing.T) {
 	}
 	if !strings.Contains(out, "CN-001") {
 		t.Errorf("output: %q", out)
+	}
+}
+
+func TestCreditNotesCreateRejectsMissingPaymentTerms(t *testing.T) {
+	bodyFile := writeTempJSON(t, map[string]any{
+		"credit_note": map[string]any{
+			"contact":  "https://api.sandbox.freeagent.com/v2/contacts/1",
+			"dated_on": "2026-04-01",
+		},
+	})
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		t.Error("should not hit server")
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp("").Run([]string{"freeagent", "credit-notes", "create", "--body", bodyFile})
+	})
+	if err == nil || !strings.Contains(err.Error(), "payment_terms_in_days") {
+		t.Errorf("expected payment_terms_in_days error, got %v", err)
 	}
 }
 
