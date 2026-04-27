@@ -6,6 +6,7 @@ import "testing"
 
 var expectedReadonlyCommands = map[string][]string{
 	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"ap":               {"practice"},
 	"bank":             {"accounts", "transactions", "explanations"},
 	"bills":            {"list", "get"},
 	"categories":       {"list"},

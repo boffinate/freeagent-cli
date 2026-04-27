@@ -6,6 +6,7 @@ import "testing"
 
 var expectedFullCommands = map[string][]string{
 	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"ap":               {"practice"},
 	"bank":             {"accounts", "transactions", "explanations", "approve"},
 	"bills":            {"list", "get"},
 	"categories":       {"list"},

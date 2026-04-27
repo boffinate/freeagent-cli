@@ -1,0 +1,80 @@
+package cli
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"testing"
+)
+
+func TestAPPracticeShow_Success(t *testing.T) {
+	var gotPath, gotMethod string
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotMethod = r.Method
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"My Practice","subdomain":"mypracticesubdomain"}`))
+	})
+	installTestHooks(t, srv)
+
+	out, err := captureStdout(t, func() error {
+		return NewApp().Run([]string{"freeagent", "ap", "practice", "show"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if gotMethod != http.MethodGet {
+		t.Errorf("method = %q, want GET", gotMethod)
+	}
+	if gotPath != "/v2/practice" {
+		t.Errorf("path = %q, want /v2/practice", gotPath)
+	}
+	for _, want := range []string{"My Practice", "mypracticesubdomain"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output %q missing %q", out, want)
+		}
+	}
+}
+
+func TestAPPracticeShow_HTTPError(t *testing.T) {
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"errors":{"error":{"message":"Access denied"}}}`))
+	})
+	installTestHooks(t, srv)
+
+	_, err := captureStdout(t, func() error {
+		return NewApp().Run([]string{"freeagent", "ap", "practice", "show"})
+	})
+	if err == nil {
+		t.Fatalf("expected error from 401, got nil")
+	}
+}
+
+func TestAPPracticeShow_JSON(t *testing.T) {
+	body := `{"name":"My Practice","subdomain":"mypracticesubdomain"}`
+	srv := setupTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(body))
+	})
+	installTestHooks(t, srv)
+
+	out, err := captureStdout(t, func() error {
+		return NewApp().Run([]string{"freeagent", "--json", "ap", "practice", "show"})
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+
+	// Must be valid JSON matching the upstream payload, not the table output.
+	var decoded map[string]any
+	if err := json.Unmarshal([]byte(strings.TrimSpace(out)), &decoded); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %q", err, out)
+	}
+	if decoded["name"] != "My Practice" || decoded["subdomain"] != "mypracticesubdomain" {
+		t.Errorf("unexpected JSON payload: %v", decoded)
+	}
+	if strings.Contains(out, "Name:") {
+		t.Errorf("--json mode should not render table; got %q", out)
+	}
+}
