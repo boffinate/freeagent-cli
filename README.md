@@ -197,6 +197,12 @@ Projects, tasks, timeslips, estimates:
 ./freeagent estimates list --contact CONTACT_ID
 ```
 
+Accountancy Practice (read):
+
+```bash
+./freeagent ap practice show
+```
+
 Bills, expenses, credit notes (read):
 
 ```bash

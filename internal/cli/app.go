@@ -42,6 +42,7 @@ func NewApp(version string) *cli.App {
 		Before: initRuntime,
 		Commands: append([]*cli.Command{
 			authCommand(),
+			apCommand(),
 			bankCommand(),
 			billsCommand(),
 			categoriesCommand(),
