@@ -12,15 +12,22 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/mod/semver"
 
+	"github.com/anjor/freeagent-cli/internal/freeagent"
 	"github.com/anjor/freeagent-cli/internal/update"
 )
 
 // updateHTTPClient indirects the *http.Client used for `version --check`.
-// Production returns nil so update.LatestRelease falls back to
-// http.DefaultClient. Tests override this to route through an httptest server
-// while still exercising the real update package end-to-end. Package-level
-// var, so tests must not call t.Parallel.
-var updateHTTPClient = func() *http.Client { return nil }
+// Production returns the build-tagged readonly-aware client so the readonly
+// binary's CheckRedirect guard re-applies enforceReadOnly to any 30x target
+// — without this indirection, update.LatestRelease would fall back to
+// http.DefaultClient (no timeout, no redirect guard) and a redirect from
+// api.github.com to a foreign host would be followed silently. Tests
+// override this to route through an httptest server while still exercising
+// the real update package end-to-end. Package-level var, so tests must
+// not call t.Parallel.
+var updateHTTPClient = func() *http.Client {
+	return freeagent.DefaultHTTPClientWithTransport(http.DefaultTransport)
+}
 
 // versionCommand registers the `freeagent version` subcommand. version is the
 // build's main.Version (injected via -ldflags); when it isn't a valid semver
