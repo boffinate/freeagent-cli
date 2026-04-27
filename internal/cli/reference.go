@@ -21,7 +21,7 @@ func categoriesCommand() *cli.Command {
 }
 
 func priceListItemsCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "price-list-items",
 		Usage: "Price list items",
 		Subcommands: []*cli.Command{
@@ -37,6 +37,8 @@ func priceListItemsCommand() *cli.Command {
 			},
 		},
 	}
+	cmd.Subcommands = append(cmd.Subcommands, priceListItemsWriteSubcommands()...)
+	return cmd
 }
 
 func stockItemsCommand() *cli.Command {

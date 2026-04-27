@@ -126,6 +126,13 @@ func writeJSONOutput(data []byte) error {
 	return err
 }
 
+// writeRaw is the printOrJSON-fallback shorthand for resources without a
+// custom table renderer: emit the bytes verbatim plus newline.
+func writeRaw(resp []byte) error {
+	_, err := os.Stdout.Write(append(resp, '\n'))
+	return err
+}
+
 // getAndDecode issues a GET and decodes the JSON body into *T. Returns both
 // the decoded value and the raw bytes so callers can choose JSON passthrough.
 func getAndDecode[T any](ctx context.Context, client *freeagent.Client, path string) (*T, []byte, error) {
