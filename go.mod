@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/urfave/cli/v2 v2.27.5
 	github.com/zalando/go-keyring v0.2.6
+	golang.org/x/mod v0.35.0
 )
 
 require (

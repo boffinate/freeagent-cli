@@ -22,6 +22,7 @@ var expectedFullCommands = map[string][]string{
 	"tasks":            {"list", "get"},
 	"timeslips":        {"list", "get"},
 	"users":            {"list", "get", "me"},
+	"version":          nil,
 	"raw":              nil,
 }
 
