@@ -11,7 +11,7 @@ import (
 )
 
 func timeslipsCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "timeslips",
 		Usage: "Timeslips",
 		Subcommands: []*cli.Command{
@@ -39,6 +39,8 @@ func timeslipsCommand() *cli.Command {
 			},
 		},
 	}
+	cmd.Subcommands = append(cmd.Subcommands, timeslipsWriteSubcommands()...)
+	return cmd
 }
 
 func timeslipsList(c *cli.Context) error {

@@ -155,6 +155,8 @@ Contacts:
 ./freeagent contacts search --query "Acme"
 ./freeagent contacts get --id CONTACT_ID
 ./freeagent contacts create --organisation "Acme Ltd" --email accounts@acme.test
+./freeagent contacts update --id CONTACT_ID --body ./contact-update.json
+./freeagent contacts delete --id CONTACT_ID --yes
 ```
 
 Bank accounts and transactions (read):
@@ -232,6 +234,45 @@ Expenses (write — full binary only):
   --dated-on 2026-04-01
 ./freeagent expenses update --id EXPENSE_ID --body ./expense-update.json
 ./freeagent expenses delete --id EXPENSE_ID --yes
+```
+
+Projects, tasks, timeslips (write — full binary only):
+
+```bash
+./freeagent projects create --contact CONTACT_ID --name "Site rebuild" \
+  --status Active --currency GBP --budget-units Hours
+./freeagent projects update --id PROJECT_ID --body ./project-update.json
+./freeagent projects delete --id PROJECT_ID --yes
+
+./freeagent tasks create --project PROJECT_ID --name "Design"
+./freeagent tasks update --id TASK_ID --body ./task-update.json
+./freeagent tasks delete --id TASK_ID --yes
+
+./freeagent timeslips create --user USER_ID --project PROJECT_ID \
+  --task TASK_ID --dated-on 2026-04-01 --hours 1.5
+./freeagent timeslips update --id TIMESLIP_ID --body ./timeslip-update.json
+./freeagent timeslips delete --id TIMESLIP_ID --yes
+./freeagent timeslips timer-start --id TIMESLIP_ID
+./freeagent timeslips timer-stop  --id TIMESLIP_ID
+```
+
+Credit notes & estimates (write — full binary only):
+
+```bash
+./freeagent credit-notes create --contact CONTACT_ID --reference CN-001 \
+  --dated-on 2026-04-01 --currency GBP --items ./credit-note-items.json
+./freeagent credit-notes update --id CN_ID --body ./credit-note-update.json
+./freeagent credit-notes send --id CN_ID --email-to client@example.com
+./freeagent credit-notes transition --id CN_ID --name mark_as_sent
+./freeagent credit-notes delete --id CN_ID --yes
+
+./freeagent estimates create --contact CONTACT_ID --reference EST-100 \
+  --dated-on 2026-04-01 --currency GBP --items ./estimate-items.json
+./freeagent estimates update --id EST_ID --body ./estimate-update.json
+./freeagent estimates send --id EST_ID --email-to client@example.com
+./freeagent estimates transition --id EST_ID --name mark_as_approved
+./freeagent estimates duplicate --id EST_ID
+./freeagent estimates delete --id EST_ID --yes
 ```
 
 Accounting transactions (ledger entries — distinct from bank transactions):

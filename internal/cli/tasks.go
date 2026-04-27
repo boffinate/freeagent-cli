@@ -11,7 +11,7 @@ import (
 )
 
 func tasksCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "tasks",
 		Usage: "Project tasks",
 		Subcommands: []*cli.Command{
@@ -34,6 +34,8 @@ func tasksCommand() *cli.Command {
 			},
 		},
 	}
+	cmd.Subcommands = append(cmd.Subcommands, tasksWriteSubcommands()...)
+	return cmd
 }
 
 func tasksList(c *cli.Context) error {

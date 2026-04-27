@@ -17,7 +17,88 @@ import (
 )
 
 func contactsWriteSubcommands() []*cli.Command {
-	return []*cli.Command{contactsCreateCmd()}
+	return []*cli.Command{contactsCreateCmd(), contactsUpdateCmd(), contactsDeleteCmd()}
+}
+
+func contactsUpdateCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "update",
+		Usage: "Update a contact",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "id", Usage: "Contact ID"},
+			&cli.StringFlag{Name: "url", Usage: "Contact URL"},
+			&cli.StringFlag{Name: "body", Usage: "JSON file with contact payload or contact object", Required: true},
+		},
+		Action: contactsUpdate,
+	}
+}
+
+func contactsDeleteCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "delete",
+		Usage: "Delete a contact",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "id", Usage: "Contact ID"},
+			&cli.StringFlag{Name: "url", Usage: "Contact URL"},
+			&cli.BoolFlag{Name: "yes", Usage: "Skip confirmation prompt"},
+		},
+		Action: contactsDelete,
+	}
+}
+
+func contactsUpdate(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+	path, err := requireIDOrURL(profile.BaseURL, "contacts", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+	contact, err := loadResourceObject(c.String("body"), "contact")
+	if err != nil {
+		return err
+	}
+	if len(contact) == 0 {
+		return fmt.Errorf("body must contain at least one field to update")
+	}
+	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPut, path, map[string]any{"contact": contact})
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		fmt.Fprintf(os.Stdout, "Updated contact %s\n", path)
+		return nil
+	})
+}
+
+func contactsDelete(c *cli.Context) error {
+	rt, client, profile, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+	path, err := requireIDOrURL(profile.BaseURL, "contacts", c.String("id"), c.String("url"))
+	if err != nil {
+		return err
+	}
+	if !c.Bool("yes") {
+		fmt.Fprintf(os.Stdout, "Delete contact %s? (y/N): ", path)
+		var answer string
+		_, _ = fmt.Fscanln(os.Stdin, &answer)
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		if answer != "y" && answer != "yes" {
+			fmt.Fprintln(os.Stdout, "Cancelled")
+			return nil
+		}
+	}
+	resp, _, _, err := client.Do(context.Background(), http.MethodDelete, path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		fmt.Fprintf(os.Stdout, "Deleted contact %s\n", path)
+		return nil
+	})
 }
 
 func contactsCreateCmd() *cli.Command {

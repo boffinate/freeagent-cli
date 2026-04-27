@@ -11,7 +11,7 @@ import (
 )
 
 func creditNotesCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "credit-notes",
 		Usage: "Credit notes",
 		Subcommands: []*cli.Command{
@@ -36,6 +36,8 @@ func creditNotesCommand() *cli.Command {
 			},
 		},
 	}
+	cmd.Subcommands = append(cmd.Subcommands, creditNotesWriteSubcommands()...)
+	return cmd
 }
 
 func creditNotesList(c *cli.Context) error {
