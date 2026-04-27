@@ -249,6 +249,9 @@ both `freeagent` and `freeagent-ro` for `darwin`, `linux`, and `windows` on
 For a local dry run without publishing, use `make snapshot` (writes to
 `dist/`).
 
+Maintainer notes — including the manual GoReleaser binary bump procedure
+that Dependabot can't automate — live in [`RELEASING.md`](./RELEASING.md).
+
 ## License
 
 MIT. See `LICENSE`.
