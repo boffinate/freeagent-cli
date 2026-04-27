@@ -16,7 +16,7 @@ func TestBankAccountsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bank", "accounts", "list"})
+		return NewApp("").Run([]string{"freeagent", "bank", "accounts", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -36,7 +36,7 @@ func TestBankAccountsListJSON(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "--json", "bank", "accounts", "list"})
+		return NewApp("").Run([]string{"freeagent", "--json", "bank", "accounts", "list"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -55,7 +55,7 @@ func TestBankAccountsGet(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bank", "accounts", "get", "--id", "1"})
+		return NewApp("").Run([]string{"freeagent", "bank", "accounts", "get", "--id", "1"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -75,7 +75,7 @@ func TestBankTransactionsListRequiresBankAccount(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bank", "transactions", "list"})
+		return NewApp("").Run([]string{"freeagent", "bank", "transactions", "list"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "bank-account") {
 		t.Errorf("expected bank-account required error, got %v", err)
@@ -91,7 +91,7 @@ func TestBankTransactionsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "bank", "transactions", "list",
 			"--bank-account", "42", "--from", "2026-01-01", "--to", "2026-01-31",
 		})
@@ -116,7 +116,7 @@ func TestBankExplanationsListRequiresBankAccount(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bank", "explanations", "list"})
+		return NewApp("").Run([]string{"freeagent", "bank", "explanations", "list"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "bank-account") {
 		t.Errorf("expected bank-account required error, got %v", err)
@@ -132,7 +132,7 @@ func TestBankExplanationsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "bank", "explanations", "list",
 			"--bank-account", "1",
 		})
@@ -152,7 +152,7 @@ func TestBankExplanationsGet(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bank", "explanations", "get", "--id", "21"})
+		return NewApp("").Run([]string{"freeagent", "bank", "explanations", "get", "--id", "21"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)

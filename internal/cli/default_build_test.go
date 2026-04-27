@@ -26,7 +26,7 @@ var expectedFullCommands = map[string][]string{
 }
 
 func TestDefaultBuildRegistersAllCommands(t *testing.T) {
-	app := NewApp()
+	app := NewApp("")
 	got := map[string][]string{}
 	for _, cmd := range app.Commands {
 		var subs []string

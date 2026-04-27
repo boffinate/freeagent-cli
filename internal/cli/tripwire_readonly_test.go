@@ -22,7 +22,7 @@ func TestReadonlyBlocksCrossHostRedirect(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "bills", "list"})
+		return NewApp("").Run([]string{"freeagent", "bills", "list"})
 	})
 	if err == nil {
 		t.Fatal("expected error, got nil")

@@ -22,7 +22,7 @@ func TestSeamRoutesThroughTestServer(t *testing.T) {
 	})
 	installTestHooks(t, srv)
 
-	app := NewApp()
+	app := NewApp("")
 	out, err := captureStdout(t, func() error {
 		return app.Run([]string{"freeagent", "contacts", "list"})
 	})
