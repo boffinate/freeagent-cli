@@ -123,6 +123,26 @@ func TestReadonlyGuardRejectsNonPOSTOnTokenEndpoint(t *testing.T) {
 	}
 }
 
+// TestReadonlyGuardGitHubHostGETOnly is a tripwire for the api.github.com
+// allowlist entry (added for `version --check`). The host must accept GET but
+// must reject any mutating method: GitHub auth tokens are out of scope of the
+// readonly build, but we still want one coherent rule — readonly is GET-only
+// at every allowed host except for the explicitly-scoped FreeAgent
+// /v2/token_endpoint POST exception.
+func TestReadonlyGuardGitHubHostGETOnly(t *testing.T) {
+	target := "https://api.github.com/repos/boffinate/freeagent-cli/releases/latest"
+
+	if err := enforceReadOnly(http.MethodGet, target); err != nil {
+		t.Errorf("readonly guard should allow GET %s: %v", target, err)
+	}
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		if err := enforceReadOnly(method, target); err == nil {
+			t.Errorf("readonly guard must reject %s %s (api.github.com is GET-only)", method, target)
+		}
+	}
+}
+
 func TestReadonlyHTTPClientCheckRedirect(t *testing.T) {
 	client := defaultHTTPClient()
 	if client.CheckRedirect == nil {

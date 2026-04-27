@@ -6,6 +6,7 @@ import "testing"
 
 var expectedReadonlyCommands = map[string][]string{
 	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"ap":               {"practice"},
 	"bank":             {"accounts", "transactions", "explanations"},
 	"bills":            {"list", "get"},
 	"categories":       {"list"},
@@ -21,13 +22,15 @@ var expectedReadonlyCommands = map[string][]string{
 	"stock-items":      {"list", "get"},
 	"tasks":            {"list", "get"},
 	"timeslips":        {"list", "get"},
+	"transactions":     {"list", "get"},
 	"users":            {"list", "get", "me"},
+	"version":          nil,
 }
 
 var forbiddenReadonlyCommands = []string{"raw"}
 
 func TestReadonlyBuildHasNoWriteCommands(t *testing.T) {
-	app := NewApp()
+	app := NewApp("")
 	got := map[string][]string{}
 	for _, cmd := range app.Commands {
 		for _, bad := range forbiddenReadonlyCommands {

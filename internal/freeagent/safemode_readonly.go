@@ -50,6 +50,9 @@ const tokenEndpointPath = "/v2/token_endpoint"
 var allowedReadonlyHosts = map[string]struct{}{
 	"api.freeagent.com":         {},
 	"api.sandbox.freeagent.com": {},
+	// api.github.com used by `freeagent version --check`; existing GET-only
+	// guard restricts attack surface.
+	"api.github.com": {},
 }
 
 // enforceReadOnly refuses, in order:

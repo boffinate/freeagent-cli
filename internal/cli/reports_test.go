@@ -16,7 +16,7 @@ func TestReportsBalanceSheet(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "reports", "balance-sheet", "--as-at", "2026-03-31"})
+		return NewApp("").Run([]string{"freeagent", "reports", "balance-sheet", "--as-at", "2026-03-31"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -42,7 +42,7 @@ func TestReportsProfitAndLossPath(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "reports", "profit-and-loss",
 			"--from", "2026-01-01", "--to", "2026-03-31",
 		})
@@ -69,7 +69,7 @@ func TestReportsProfitAndLossDefaultsWithNoFilter(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "reports", "profit-and-loss"})
+		return NewApp("").Run([]string{"freeagent", "reports", "profit-and-loss"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -88,7 +88,7 @@ func TestReportsProfitAndLossAcceptsAccountingPeriod(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "reports", "profit-and-loss",
 			"--accounting-period", "2022/23",
 		})
@@ -110,7 +110,7 @@ func TestReportsTrialBalancePath(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "reports", "trial-balance"})
+		return NewApp("").Run([]string{"freeagent", "reports", "trial-balance"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -127,7 +127,7 @@ func TestReportsCashflowRequiresDates(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "reports", "cashflow"})
+		return NewApp("").Run([]string{"freeagent", "reports", "cashflow"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "from") {
 		t.Errorf("expected from/to required error, got %v", err)
@@ -144,7 +144,7 @@ func TestReportsCashflow(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "reports", "cashflow",
 			"--from", "2026-01-01", "--to", "2026-03-31",
 		})

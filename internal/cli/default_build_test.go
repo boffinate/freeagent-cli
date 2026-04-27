@@ -6,6 +6,7 @@ import "testing"
 
 var expectedFullCommands = map[string][]string{
 	"auth":             {"configure", "login", "status", "refresh", "logout"},
+	"ap":               {"practice"},
 	"bank":             {"accounts", "transactions", "explanations", "approve"},
 	"bills":            {"list", "get"},
 	"categories":       {"list"},
@@ -21,12 +22,14 @@ var expectedFullCommands = map[string][]string{
 	"stock-items":      {"list", "get"},
 	"tasks":            {"list", "get"},
 	"timeslips":        {"list", "get"},
+	"transactions":     {"list", "get"},
 	"users":            {"list", "get", "me"},
+	"version":          nil,
 	"raw":              nil,
 }
 
 func TestDefaultBuildRegistersAllCommands(t *testing.T) {
-	app := NewApp()
+	app := NewApp("")
 	got := map[string][]string{}
 	for _, cmd := range app.Commands {
 		var subs []string

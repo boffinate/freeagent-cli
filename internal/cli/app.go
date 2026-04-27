@@ -8,10 +8,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func NewApp() *cli.App {
+func NewApp(version string) *cli.App {
 	app := &cli.App{
-		Name:  "freeagent",
-		Usage: "CLI for the FreeAgent API",
+		Name:    "freeagent",
+		Usage:   "CLI for the FreeAgent API",
+		Version: version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config",
@@ -41,6 +42,7 @@ func NewApp() *cli.App {
 		Before: initRuntime,
 		Commands: append([]*cli.Command{
 			authCommand(),
+			apCommand(),
 			bankCommand(),
 			billsCommand(),
 			categoriesCommand(),
@@ -56,7 +58,9 @@ func NewApp() *cli.App {
 			stockItemsCommand(),
 			tasksCommand(),
 			timeslipsCommand(),
+			transactionsCommand(),
 			usersCommand(),
+			versionCommand(version),
 		}, writeCommands()...),
 	}
 

@@ -13,7 +13,7 @@ func TestTimeslipsListRequiresDateFilter(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "timeslips", "list"})
+		return NewApp("").Run([]string{"freeagent", "timeslips", "list"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "from") {
 		t.Errorf("expected date-filter required error, got %v", err)
@@ -29,7 +29,7 @@ func TestTimeslipsList(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "timeslips", "list",
 			"--from", "2026-01-01", "--to", "2026-01-31", "--user", "7",
 		})

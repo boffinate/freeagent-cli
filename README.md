@@ -197,6 +197,12 @@ Projects, tasks, timeslips, estimates:
 ./freeagent estimates list --contact CONTACT_ID
 ```
 
+Accountancy Practice (read):
+
+```bash
+./freeagent ap practice show
+```
+
 Bills, expenses, credit notes (read):
 
 ```bash
@@ -204,6 +210,14 @@ Bills, expenses, credit notes (read):
 ./freeagent bills get --id BILL_ID
 ./freeagent expenses list --user USER_ID --from 2026-01-01
 ./freeagent credit-notes list --contact CONTACT_ID
+```
+
+Accounting transactions (ledger entries — distinct from bank transactions):
+
+```bash
+./freeagent transactions list --from-date 2026-01-01 --to-date 2026-03-31
+./freeagent transactions list --nominal-code 750-1
+./freeagent transactions get --id TRANSACTION_ID
 ```
 
 Bank transactions (bulk approve):
@@ -242,6 +256,30 @@ make test-e2e-ro
 
 See [`docs/e2e.md`](docs/e2e.md) for sandbox provisioning and env-var
 setup.
+
+## Releases
+
+Tagged releases publish cross-platform binaries via GoReleaser and GitHub
+Actions. Tags must be cut from a commit on `main`; the release workflow
+refuses to run otherwise.
+
+```bash
+git checkout main
+git pull --ff-only
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The `release.yml` workflow then runs `goreleaser release --clean`, builds
+both `freeagent` and `freeagent-ro` for `darwin`, `linux`, and `windows` on
+`amd64` and `arm64`, and publishes the archives plus a `checksums.txt` to
+[GitHub Releases](https://github.com/boffinate/freeagent-cli/releases).
+
+For a local dry run without publishing, use `make snapshot` (writes to
+`dist/`).
+
+Maintainer notes — including the manual GoReleaser binary bump procedure
+that Dependabot can't automate — live in [`RELEASING.md`](./RELEASING.md).
 
 ## License
 
