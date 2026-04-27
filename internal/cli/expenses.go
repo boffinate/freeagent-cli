@@ -11,7 +11,7 @@ import (
 )
 
 func expensesCommand() *cli.Command {
-	return &cli.Command{
+	cmd := &cli.Command{
 		Name:  "expenses",
 		Usage: "Out-of-pocket expenses",
 		Subcommands: []*cli.Command{
@@ -40,6 +40,8 @@ func expensesCommand() *cli.Command {
 			},
 		},
 	}
+	cmd.Subcommands = append(cmd.Subcommands, expensesWriteSubcommands()...)
+	return cmd
 }
 
 func expensesList(c *cli.Context) error {

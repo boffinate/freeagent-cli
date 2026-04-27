@@ -222,6 +222,18 @@ Bills (write — full binary only):
 ./freeagent bills delete --id BILL_ID --yes
 ```
 
+Expenses (write — full binary only):
+
+```bash
+./freeagent expenses create --body ./expense.json
+./freeagent expenses create --user USER_ID --category 285 \
+  --dated-on 2026-04-01 --gross-value 12.50 --description "Train fare"
+./freeagent expenses create --user USER_ID --category Mileage \
+  --dated-on 2026-04-01
+./freeagent expenses update --id EXPENSE_ID --body ./expense-update.json
+./freeagent expenses delete --id EXPENSE_ID --yes
+```
+
 Accounting transactions (ledger entries — distinct from bank transactions):
 
 ```bash
