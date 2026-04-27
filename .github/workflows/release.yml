@@ -23,10 +23,10 @@ jobs:
         # The release workflow triggers on any v* tag push. Refuse to
         # publish if the tag commit is not an ancestor of origin/main, so
         # an accidentally pushed tag from a feature branch can't ship
-        # unreviewed binaries.
+        # unreviewed binaries. `actions/checkout` with `fetch-depth: 0`
+        # already populates origin/main; no extra fetch needed.
         run: |
           set -euo pipefail
-          git fetch origin main --depth=0 || git fetch origin main
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "tag $GITHUB_REF_NAME ($GITHUB_SHA) is not reachable from origin/main; refusing to release" >&2
             exit 1

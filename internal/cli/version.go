@@ -16,15 +16,10 @@ import (
 	"github.com/anjor/freeagent-cli/internal/update"
 )
 
-// updateHTTPClient indirects the *http.Client used for `version --check`.
-// Production returns the build-tagged readonly-aware client so the readonly
-// binary's CheckRedirect guard re-applies enforceReadOnly to any 30x target
-// — without this indirection, update.LatestRelease would fall back to
-// http.DefaultClient (no timeout, no redirect guard) and a redirect from
-// api.github.com to a foreign host would be followed silently. Tests
-// override this to route through an httptest server while still exercising
-// the real update package end-to-end. Package-level var, so tests must
-// not call t.Parallel.
+// updateHTTPClient routes `version --check` through the build-tagged
+// readonly-aware client. Without this indirection, update.LatestRelease
+// would fall back to http.DefaultClient and a 30x from api.github.com to
+// a foreign host would be followed silently under -tags readonly.
 var updateHTTPClient = func() *http.Client {
 	return freeagent.DefaultHTTPClientWithTransport(http.DefaultTransport)
 }

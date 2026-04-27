@@ -40,15 +40,16 @@ const (
 	EnvClientSecret = "FREEAGENT_E2E_CLIENT_SECRET"
 	EnvBaseURL      = "FREEAGENT_E2E_BASE_URL"
 
-	// DefaultBaseURL is the FreeAgent sandbox API root used when EnvBaseURL
-	// is not set. Production is intentionally NOT a default — leaking real
-	// data through a bug in the harness is exactly what this package must
-	// avoid.
-	DefaultBaseURL = "https://api.sandbox.freeagent.com/v2"
+	// allowedE2EHost is the only host the harness will target. Production
+	// (api.freeagent.com) is deliberately excluded: the harness creates
+	// and deletes resources, and a fat-fingered FREEAGENT_E2E_BASE_URL
+	// must not be able to mutate real customer data. Mirrors the readonly
+	// binary's hardcoded host allowlist in safemode_readonly.go.
+	allowedE2EHost = "api.sandbox.freeagent.com"
 
-	// e2eProfile is the synthetic profile name used for the Token store
-	// inside the harness. The harness never touches the user's real
-	// keychain or ~/.config/freeagent tokens.
+	// DefaultBaseURL is used when EnvBaseURL is not set.
+	DefaultBaseURL = "https://" + allowedE2EHost + "/v2"
+
 	e2eProfile = "e2e"
 
 	// refreshSkew is the buffer subtracted from the token's ExpiresAt before
@@ -56,15 +57,6 @@ const (
 	// the token expiring mid-test on slow CI; five minutes is comfortable.
 	refreshSkew = 5 * time.Minute
 )
-
-// allowedE2EHosts is the closed set of hosts the e2e harness will target.
-// Production (api.freeagent.com) is deliberately absent: the harness creates
-// and deletes resources, and a fat-fingered FREEAGENT_E2E_BASE_URL must not
-// be able to mutate real customer data. Mirrors the philosophy of the
-// readonly binary's hardcoded host allowlist in safemode_readonly.go.
-var allowedE2EHosts = map[string]struct{}{
-	"api.sandbox.freeagent.com": {},
-}
 
 // Harness bundles everything an e2e test needs: a configured *freeagent.Client
 // that will refresh tokens automatically, the resolved base URL for sanity
@@ -91,7 +83,7 @@ func bootstrap(tokenFile, clientID, clientSecret, baseURL string) (*Harness, err
 	if err != nil {
 		return nil, fmt.Errorf("parse %s=%q: %w", EnvBaseURL, baseURL, err)
 	}
-	if _, ok := allowedE2EHosts[parsed.Host]; !ok {
+	if parsed.Host != allowedE2EHost {
 		return nil, fmt.Errorf("e2e harness refuses non-sandbox host %q (set %s to a sandbox URL such as %s)", parsed.Host, EnvBaseURL, DefaultBaseURL)
 	}
 
@@ -100,10 +92,9 @@ func bootstrap(tokenFile, clientID, clientSecret, baseURL string) (*Harness, err
 		return nil, fmt.Errorf("token store: %w", err)
 	}
 
-	// HTTP is intentionally left nil so Client.httpClient() falls back to the
-	// build-tagged defaultHTTPClient(). Under -tags readonly that returns a
-	// client with the CheckRedirect guard wired up, so a 30x to a disallowed
-	// host is refused at redirect time as well as pre-flight.
+	// HTTP nil → Client.httpClient() picks up the build-tagged
+	// defaultHTTPClient(), which under -tags readonly carries the
+	// CheckRedirect guard.
 	client := &freeagent.Client{
 		BaseURL:      baseURL,
 		UserAgent:    "freeagent-cli-e2e/0.1",

@@ -19,12 +19,7 @@ import (
 // against (method, url) and runs before AccessToken() is even consulted.
 // That makes this safe to run in CI without sandbox creds.
 func TestE2E_Smoke_ReadonlyBuild(t *testing.T) {
-	// Leave HTTP nil so the client falls back to the build-tagged
-	// defaultHTTPClient(), which under -tags readonly carries the
-	// CheckRedirect guard. The DELETE below is rejected pre-flight, so
-	// this test does not itself exercise the redirect path — but the
-	// harness uses the same wiring, and we don't want a stripped client
-	// here to drift from production.
+	// HTTP nil → defaultHTTPClient() picks up the readonly CheckRedirect guard.
 	c := &freeagent.Client{
 		BaseURL: DefaultBaseURL,
 	}
