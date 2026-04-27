@@ -2,8 +2,6 @@ package update
 
 import (
 	"encoding/json"
-	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -41,9 +39,6 @@ func LoadCache(now time.Time) (entry CacheEntry, fresh bool) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return CacheEntry{}, false
-		}
 		return CacheEntry{}, false
 	}
 	if err := json.Unmarshal(data, &entry); err != nil {

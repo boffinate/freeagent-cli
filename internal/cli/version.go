@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -99,7 +100,7 @@ func runVersion(c *cli.Context, version string) error {
 // also re-printing the error.
 func reportCheckError(version string, err error) error {
 	var rate *update.ErrRateLimited
-	if asRateLimited(err, &rate) {
+	if errors.As(err, &rate) {
 		when := "soon"
 		if !rate.Reset.IsZero() {
 			when = rate.Reset.Format(time.RFC3339)
@@ -109,23 +110,6 @@ func reportCheckError(version string, err error) error {
 	}
 	fmt.Fprintf(os.Stderr, "freeagent %s — could not check for updates: %v\n", version, err)
 	return cli.Exit("", 2)
-}
-
-// asRateLimited is a tiny shim so the error-type assertion stays close to the
-// caller without dragging the errors import into runVersion.
-func asRateLimited(err error, target **update.ErrRateLimited) bool {
-	for e := err; e != nil; {
-		if r, ok := e.(*update.ErrRateLimited); ok {
-			*target = r
-			return true
-		}
-		u, ok := e.(interface{ Unwrap() error })
-		if !ok {
-			return false
-		}
-		e = u.Unwrap()
-	}
-	return false
 }
 
 // normalizeForSemver coerces a tag-ish string into the form
