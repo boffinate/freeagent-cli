@@ -112,10 +112,10 @@ func transactionsGet(c *cli.Context) error {
 		fmt.Fprintf(os.Stdout, "Category:      %v\n", txn["category_name"])
 		fmt.Fprintf(os.Stdout, "Nominal Code:  %v\n", txn["nominal_code"])
 		fmt.Fprintf(os.Stdout, "Debit Value:   %v\n", txn["debit_value"])
-		if src, ok := txn["source_item_url"]; ok && src != nil && src != "" {
-			fmt.Fprintf(os.Stdout, "Source Item:   %v\n", src)
+		if src, _ := txn["source_item_url"].(string); src != "" {
+			fmt.Fprintf(os.Stdout, "Source Item:   %s\n", src)
 		}
-		if fcd, ok := txn["foreign_currency_data"].(map[string]any); ok && len(fcd) > 0 {
+		if fcd, _ := txn["foreign_currency_data"].(map[string]any); len(fcd) > 0 {
 			fmt.Fprintf(os.Stdout, "FX Currency:   %v\n", fcd["currency_code"])
 			fmt.Fprintf(os.Stdout, "FX Debit:      %v\n", fcd["debit_value"])
 		}
