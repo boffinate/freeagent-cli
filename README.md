@@ -228,6 +228,30 @@ Bank transactions (bulk approve):
 - Default API base URL is production; use `--sandbox` for the sandbox API.
 - Use `--json` to print raw JSON for automation or piping into other tools.
 
+## Releases
+
+Tagged releases publish cross-platform binaries via GoReleaser and GitHub
+Actions. Tags must be cut from a commit on `main`; the release workflow
+refuses to run otherwise.
+
+```bash
+git checkout main
+git pull --ff-only
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The `release.yml` workflow then runs `goreleaser release --clean`, builds
+both `freeagent` and `freeagent-ro` for `darwin`, `linux`, and `windows` on
+`amd64` and `arm64`, and publishes the archives plus a `checksums.txt` to
+[GitHub Releases](https://github.com/boffinate/freeagent-cli/releases).
+
+For a local dry run without publishing, use `make snapshot` (writes to
+`dist/`).
+
+Maintainer notes — including the manual GoReleaser binary bump procedure
+that Dependabot can't automate — live in [`RELEASING.md`](./RELEASING.md).
+
 ## License
 
 MIT. See `LICENSE`.
