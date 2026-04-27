@@ -231,9 +231,12 @@ Bank transactions (bulk approve):
 ## Releases
 
 Tagged releases publish cross-platform binaries via GoReleaser and GitHub
-Actions. To cut a release:
+Actions. Tags must be cut from a commit on `main`; the release workflow
+refuses to run otherwise.
 
 ```bash
+git checkout main
+git pull --ff-only
 git tag v0.1.0
 git push origin v0.1.0
 ```

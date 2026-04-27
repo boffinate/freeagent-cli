@@ -1,9 +1,9 @@
 version: 2
 project_name: freeagent
 
-before:
-  hooks:
-    - go mod tidy
+# No `before:` hook: release builds must consume the dependency state
+# committed at the tag rather than mutate it. `go mod verify` runs in CI
+# (release.yml) as a read-only check that go.sum matches.
 
 builds:
   - id: freeagent
