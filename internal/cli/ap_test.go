@@ -18,7 +18,7 @@ func TestAPPracticeShow_Success(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "ap", "practice", "show"})
+		return NewApp("").Run([]string{"freeagent", "ap", "practice", "show"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -44,7 +44,7 @@ func TestAPPracticeShow_HTTPError(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "ap", "practice", "show"})
+		return NewApp("").Run([]string{"freeagent", "ap", "practice", "show"})
 	})
 	if err == nil {
 		t.Fatalf("expected error from 401, got nil")
@@ -60,7 +60,7 @@ func TestAPPracticeShow_JSON(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "--json", "ap", "practice", "show"})
+		return NewApp("").Run([]string{"freeagent", "--json", "ap", "practice", "show"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)

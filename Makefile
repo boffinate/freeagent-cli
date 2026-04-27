@@ -1,4 +1,4 @@
-.PHONY: all build build-ro install install-ro test test-ro verify clean snapshot
+.PHONY: all build build-ro install install-ro test test-ro test-e2e test-e2e-ro verify clean snapshot
 
 GOBIN ?= $(shell go env GOPATH)/bin
 PREFIX ?= $(GOBIN)
@@ -21,6 +21,12 @@ test:
 
 test-ro:
 	go test -tags readonly ./...
+
+test-e2e: build
+	go test -tags e2e -count=1 -timeout 15m -parallel 1 ./internal/e2e/...
+
+test-e2e-ro: build-ro
+	go test -tags e2e,readonly -count=1 -timeout 15m -parallel 1 ./internal/e2e/...
 
 install-ro: test-ro build-ro
 	install -m 0755 bin/freeagent-ro "$(PREFIX)/freeagent-ro"

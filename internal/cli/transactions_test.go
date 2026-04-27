@@ -13,7 +13,7 @@ func TestTransactions_List_Success(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "transactions", "list",
 			"--from-date", "2026-01-01", "--to-date", "2026-01-31",
 		})
@@ -38,7 +38,7 @@ func TestTransactions_List_PassesFilters(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{
+		return NewApp("").Run([]string{
 			"freeagent", "transactions", "list",
 			"--from-date", "2026-01-01",
 			"--to-date", "2026-03-31",
@@ -71,7 +71,7 @@ func TestTransactions_Get_Success(t *testing.T) {
 	installTestHooks(t, srv)
 
 	out, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "transactions", "get", "--id", "1"})
+		return NewApp("").Run([]string{"freeagent", "transactions", "get", "--id", "1"})
 	})
 	if err != nil {
 		t.Fatalf("run: %v", err)
@@ -93,7 +93,7 @@ func TestTransactions_Get_RequiresIdentifier(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "transactions", "get"})
+		return NewApp("").Run([]string{"freeagent", "transactions", "get"})
 	})
 	if err == nil || !strings.Contains(err.Error(), "id or url") {
 		t.Errorf("expected id-or-url error, got %v", err)
@@ -108,7 +108,7 @@ func TestTransactions_List_HTTPError(t *testing.T) {
 	installTestHooks(t, srv)
 
 	_, err := captureStdout(t, func() error {
-		return NewApp().Run([]string{"freeagent", "transactions", "list"})
+		return NewApp("").Run([]string{"freeagent", "transactions", "list"})
 	})
 	if err == nil {
 		t.Fatal("expected error from non-200 response")
