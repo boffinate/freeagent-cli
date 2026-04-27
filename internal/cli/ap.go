@@ -31,6 +31,13 @@ func apCommand() *cli.Command {
 					apAccountManagersShowCmd(),
 				},
 			},
+			{
+				Name:  "clients",
+				Usage: "Clients of the practice",
+				Subcommands: []*cli.Command{
+					apClientsListCmd(),
+				},
+			},
 		},
 	}
 }
@@ -151,5 +158,75 @@ func apAccountManagersShow(c *cli.Context) error {
 		fmt.Fprintf(os.Stdout, "Email: %v\n", am["email"])
 		fmt.Fprintf(os.Stdout, "URL:   %v\n", am["url"])
 		return nil
+	})
+}
+
+func apClientsListCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "list",
+		Usage: "List clients of the practice",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "view", Usage: "View filter: all|active|inactive|closed|practice|linked|copilot|demo"},
+			&cli.StringFlag{Name: "sort", Usage: "Sort field: created_at|updated_at (prefix - for descending)"},
+			&cli.StringFlag{Name: "from-date", Usage: "Filter by created_at >= date (YYYY-MM-DD)"},
+			&cli.StringFlag{Name: "to-date", Usage: "Filter by created_at <= date (YYYY-MM-DD)"},
+			&cli.StringFlag{Name: "updated-since", Usage: "Filter by updated_since (RFC3339)"},
+			&cli.BoolFlag{Name: "minimal", Usage: "Use minimal_data=true response (allows --per-page up to 500)"},
+			&cli.IntFlag{Name: "per-page", Usage: "Items per page"},
+			&cli.IntFlag{Name: "page", Usage: "Page number"},
+		},
+		Action: apClientsList,
+	}
+}
+
+func apClientsList(c *cli.Context) error {
+	rt, client, _, err := bootstrapClient(c)
+	if err != nil {
+		return err
+	}
+
+	params := map[string]string{
+		"view":          c.String("view"),
+		"sort":          c.String("sort"),
+		"from_date":     c.String("from-date"),
+		"to_date":       c.String("to-date"),
+		"updated_since": c.String("updated-since"),
+	}
+	if c.Bool("minimal") {
+		params["minimal_data"] = "true"
+	}
+	if v := c.Int("per-page"); v > 0 {
+		params["per_page"] = fmt.Sprintf("%d", v)
+	}
+	if v := c.Int("page"); v > 0 {
+		params["page"] = fmt.Sprintf("%d", v)
+	}
+
+	path := appendQuery("/clients", buildQueryParams(params))
+
+	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
+	if err != nil {
+		return err
+	}
+	return printOrJSON(rt, resp, func() error {
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			return err
+		}
+		list, _ := decoded["clients"].([]any)
+		if len(list) == 0 {
+			fmt.Fprintln(os.Stdout, "No clients found")
+			return nil
+		}
+		writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(writer, "Name\tSubdomain\tAccount Manager\tURL")
+		for _, item := range list {
+			cl, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			fmt.Fprintf(writer, "%v\t%v\t%v\t%v\n", cl["name"], cl["subdomain"], cl["account_manager"], cl["url"])
+		}
+		return writer.Flush()
 	})
 }
