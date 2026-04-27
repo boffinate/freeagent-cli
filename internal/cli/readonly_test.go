@@ -22,6 +22,7 @@ var expectedReadonlyCommands = map[string][]string{
 	"tasks":            {"list", "get"},
 	"timeslips":        {"list", "get"},
 	"users":            {"list", "get", "me"},
+	"version":          nil,
 }
 
 var forbiddenReadonlyCommands = []string{"raw"}
