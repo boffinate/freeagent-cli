@@ -1,4 +1,4 @@
-.PHONY: all build build-ro install install-ro test test-ro verify clean
+.PHONY: all build build-ro install install-ro test test-ro verify clean snapshot
 
 GOBIN ?= $(shell go env GOPATH)/bin
 PREFIX ?= $(GOBIN)
@@ -36,4 +36,7 @@ verify:
 	go vet ./...
 
 clean:
-	rm -rf bin/
+	rm -rf bin/ dist/
+
+snapshot:
+	goreleaser release --snapshot --clean

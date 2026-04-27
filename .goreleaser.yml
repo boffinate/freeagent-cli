@@ -1,0 +1,87 @@
+version: 2
+project_name: freeagent
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: freeagent
+    binary: freeagent
+    main: ./cmd/freeagent
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.Version={{.Version}}
+
+  - id: freeagent-ro
+    binary: freeagent-ro
+    main: ./cmd/freeagent
+    flags:
+      - -tags=readonly
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.Version={{.Version}}
+
+archives:
+  - id: freeagent
+    ids:
+      - freeagent
+    name_template: "freeagent_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+
+  - id: freeagent-ro
+    ids:
+      - freeagent-ro
+    name_template: "freeagent-ro_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  github:
+    owner: boffinate
+    name: freeagent-cli
+  draft: false
+  prerelease: auto
