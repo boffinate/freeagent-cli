@@ -72,11 +72,29 @@ checksum:
 changelog:
   use: github
   sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??:.+$'
+      order: 1
+    - title: Refactors
+      regexp: '^.*?refactor(\(.+\))??:.+$'
+      order: 2
+    - title: Other
+      order: 999
   filters:
     exclude:
       - "^docs:"
       - "^test:"
       - "^chore:"
+      - "^ci:"
+      - "^build:"
+      - "^style:"
+      - "^Merge pull request"
+      - "^Merge branch"
+      - "^go mod tidy"
 
 release:
   github:
@@ -88,3 +106,28 @@ release:
   # been written. The retry then 422s with "already_exists". Replacing on
   # retry makes the upload idempotent across that flake.
   replace_existing_artifacts: true
+  header: |
+    ## Install
+
+    Two binaries ship from one source tree:
+
+    | Binary | For | Capabilities |
+    |---|---|---|
+    | `freeagent` | Humans at a terminal | Full read + write |
+    | `freeagent-ro` | AI agents, scripts, automations | Read-only against FreeAgent business data |
+
+    See [README — Safety model](https://github.com/boffinate/freeagent-cli#safety-model) for why two binaries rather than a `--write` flag.
+
+    **Download** the archive for your OS/arch below, extract, and put the binary on your `PATH`. Verify against `checksums.txt`:
+
+    ```bash
+    shasum -a 256 -c checksums.txt --ignore-missing
+    ```
+
+    Or via `go install`:
+
+    ```bash
+    go install github.com/boffinate/freeagent-cli/cmd/freeagent@v{{ .Version }}
+    ```
+  footer: |
+    **Full diff**: https://github.com/boffinate/freeagent-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
