@@ -5,5 +5,6 @@ type Runtime struct {
 	Profile    string
 	Sandbox    bool
 	BaseURL    string
+	Subdomain  string
 	JSONOutput bool
 }

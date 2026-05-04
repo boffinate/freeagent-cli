@@ -34,6 +34,12 @@ func NewApp(version string) *cli.App {
 				EnvVars: []string{"FREEAGENT_BASE_URL"},
 				Usage:   "Override API base URL",
 			},
+			&cli.StringFlag{
+				Name:    "subdomain",
+				Aliases: []string{"client"},
+				EnvVars: []string{"FREEAGENT_SUBDOMAIN"},
+				Usage:   "Send X-Subdomain header to act on behalf of a practice client (Accountancy Practice API)",
+			},
 			&cli.BoolFlag{
 				Name:  "json",
 				Usage: "Output raw JSON",
@@ -92,6 +98,7 @@ func initRuntime(c *cli.Context) error {
 		Profile:    c.String("profile"),
 		Sandbox:    c.Bool("sandbox"),
 		BaseURL:    c.String("base-url"),
+		Subdomain:  strings.TrimSpace(c.String("subdomain")),
 		JSONOutput: c.Bool("json"),
 	}
 

@@ -87,6 +87,7 @@ func newClient(ctx context.Context, rt Runtime, profile config.Profile) (*freeag
 		ClientSecret: profile.ClientSecret,
 		RedirectURI:  profile.RedirectURI,
 		Profile:      rt.Profile,
+		Subdomain:    rt.Subdomain,
 		Store:        store,
 		HTTP:         newHTTPClient(rt),
 	}

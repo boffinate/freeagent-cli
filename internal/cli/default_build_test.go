@@ -6,7 +6,7 @@ import "testing"
 
 var expectedFullCommands = map[string][]string{
 	"auth":                    {"configure", "login", "status", "refresh", "logout"},
-	"ap":                      {"practice"},
+	"ap":                      {"practice", "account-managers", "clients"},
 	"account-locks":           {"list", "set", "delete"},
 	"attachments":             {"get", "delete"},
 	"bank":                    {"accounts", "transactions", "explanations", "approve"},
@@ -20,7 +20,7 @@ var expectedFullCommands = map[string][]string{
 	"corporation-tax-returns": {"list", "get", "transition"},
 	"credit-notes":            {"list", "get", "create", "update", "delete", "send", "transition"},
 	"email-addresses":         {"list"},
-	"estimates":               {"list", "get", "create", "update", "delete", "send", "transition", "duplicate"},
+	"estimates":               {"list", "get", "create", "update", "delete", "send", "transition", "duplicate", "items"},
 	"expenses":                {"list", "get", "create", "update", "delete"},
 	"final-accounts-reports":  {"list", "get", "transition"},
 	"hire-purchases":          {"list", "get"},

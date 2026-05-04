@@ -33,6 +33,7 @@ func creditNotesCreateCmd() *cli.Command {
 			&cli.StringFlag{Name: "reference", Usage: "Reference (overrides body)"},
 			&cli.StringFlag{Name: "dated-on", Usage: "Date YYYY-MM-DD (overrides body)"},
 			&cli.StringFlag{Name: "currency", Usage: "Currency code (overrides body)"},
+			&cli.StringFlag{Name: "payment-terms-days", Usage: "Payment terms in days (overrides body)"},
 			&cli.StringFlag{Name: "items", Usage: "JSON file with credit_note_items array (overrides body)"},
 		},
 		Action: creditNotesCreate,
@@ -122,6 +123,9 @@ func creditNotesCreate(c *cli.Context) error {
 	if v := strings.TrimSpace(c.String("currency")); v != "" {
 		creditNote["currency"] = v
 	}
+	if v := strings.TrimSpace(c.String("payment-terms-days")); v != "" {
+		creditNote["payment_terms_in_days"] = v
+	}
 	if itemsPath := c.String("items"); itemsPath != "" {
 		items, err := loadItemsArray(itemsPath, "credit_note_items")
 		if err != nil {
@@ -129,8 +133,10 @@ func creditNotesCreate(c *cli.Context) error {
 		}
 		creditNote["credit_note_items"] = items
 	}
-	if _, ok := creditNote["contact"]; !ok {
-		return fmt.Errorf("contact is required (set via flag or --body)")
+	for _, field := range []string{"contact", "dated_on", "payment_terms_in_days"} {
+		if _, ok := creditNote[field]; !ok {
+			return fmt.Errorf("%s is required (set via flag or --body)", field)
+		}
 	}
 
 	resp, _, _, err := client.DoJSON(context.Background(), http.MethodPost, "/credit_notes", map[string]any{"credit_note": creditNote})

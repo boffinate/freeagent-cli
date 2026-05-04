@@ -203,7 +203,33 @@ Accountancy Practice (read):
 
 ```bash
 ./freeagent ap practice show
+./freeagent ap account-managers list
+./freeagent ap account-managers show --id ACCOUNT_MANAGER_ID
+./freeagent ap clients list
+./freeagent ap clients list --view active --sort -created_at
+./freeagent ap clients list --minimal --per-page 500
+./freeagent ap clients list --from-date 2024-01-01 --to-date 2024-12-31
+./freeagent ap clients list --updated-since 2024-06-01T00:00:00Z
 ```
+
+The `ap` commands require a token issued for an app with **Accountancy
+Practice API** enabled in the FreeAgent Developer Dashboard. A token from
+a non-accountant account will surface FreeAgent's API error verbatim
+(typically 401/403). There is no client-side gate — the binary lets you
+attempt the call so the upstream error is visible.
+
+Acting on behalf of a practice client (any standard endpoint):
+
+```bash
+./freeagent --subdomain CLIENT_SUBDOMAIN contacts list
+./freeagent --client CLIENT_SUBDOMAIN invoices list
+FREEAGENT_SUBDOMAIN=acme ./freeagent reports balance-sheet --as-at 2026-03-31
+```
+
+`--subdomain` (alias `--client`, env `FREEAGENT_SUBDOMAIN`) is global: it
+adds `X-Subdomain: CLIENT_SUBDOMAIN` to every request, so the existing
+read commands work per-client without parallel `ap <command>` mirrors.
+The flag also works with `freeagent-ro` for safe per-client reads.
 
 Bills, expenses, credit notes (read):
 
