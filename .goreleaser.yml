@@ -84,3 +84,7 @@ release:
     name: freeagent-cli
   draft: false
   prerelease: auto
+  # GitHub's upload API occasionally returns 5xx after the asset has already
+  # been written. The retry then 422s with "already_exists". Replacing on
+  # retry makes the upload idempotent across that flake.
+  replace_existing_artifacts: true
