@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"text/tabwriter"
 
@@ -22,10 +21,10 @@ func capitalAssetsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List capital assets",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "view", Usage: "API view filter"},
 					&cli.BoolFlag{Name: "include-history", Usage: "Include capital asset history"},
-				},
+				),
 				Action: capitalAssetsList,
 			},
 			{
@@ -46,7 +45,7 @@ func capitalAssetTypesCommand() *cli.Command {
 		Name:  "capital-asset-types",
 		Usage: "Capital asset types",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List capital asset types", Action: capitalAssetTypesList},
+			{Name: "list", Usage: "List capital asset types", Flags: withPagination(), Action: capitalAssetTypesList},
 			{
 				Name:  "get",
 				Usage: "Get a capital asset type by ID or URL",
@@ -67,7 +66,7 @@ func hirePurchasesCommand() *cli.Command {
 		Name:  "hire-purchases",
 		Usage: "Hire purchases",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List hire purchases", Action: hirePurchasesList},
+			{Name: "list", Usage: "List hire purchases", Flags: withPagination(), Action: hirePurchasesList},
 			{
 				Name:  "get",
 				Usage: "Get a hire purchase by ID or URL",
@@ -86,7 +85,7 @@ func propertiesCommand() *cli.Command {
 		Name:  "properties",
 		Usage: "Properties (rental income)",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List properties", Action: propertiesList},
+			{Name: "list", Usage: "List properties", Flags: withPagination(), Action: propertiesList},
 			{
 				Name:  "get",
 				Usage: "Get a property by ID or URL",
@@ -107,15 +106,11 @@ func capitalAssetsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	q := url.Values{}
-	if v := c.String("view"); v != "" {
-		q.Set("view", v)
-	}
+	params := map[string]string{"view": c.String("view")}
 	if c.Bool("include-history") {
-		q.Set("include_history", "true")
+		params["include_history"] = "true"
 	}
-	path := appendQuery("/capital_assets", q.Encode())
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/capital_assets", params, "capital_assets", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -147,7 +142,7 @@ func capitalAssetsGet(c *cli.Context) error {
 }
 
 func capitalAssetTypesList(c *cli.Context) error {
-	return readListPassthrough(c, "/capital_asset_types")
+	return paginatedListPassthrough(c, "/capital_asset_types", "capital_asset_types")
 }
 
 func capitalAssetTypesGet(c *cli.Context) error {
@@ -155,7 +150,7 @@ func capitalAssetTypesGet(c *cli.Context) error {
 }
 
 func hirePurchasesList(c *cli.Context) error {
-	return readListPassthrough(c, "/hire_purchases")
+	return paginatedListPassthrough(c, "/hire_purchases", "hire_purchases")
 }
 
 func hirePurchasesGet(c *cli.Context) error {
@@ -167,7 +162,7 @@ func propertiesList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/properties", nil, "")
+	resp, err := listAll(context.Background(), client, "/properties", nil, "properties", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -214,12 +209,15 @@ func readResource(c *cli.Context, resource string) error {
 	return printOrJSON(rt, resp, func() error { return writeRaw(resp) })
 }
 
-func readListPassthrough(c *cli.Context, path string) error {
+// paginatedListPassthrough fetches a list endpoint, auto-paginating, then
+// emits the merged JSON verbatim. Used for resources that don't have a custom
+// table renderer.
+func paginatedListPassthrough(c *cli.Context, path, wrapper string) error {
 	rt, client, _, err := bootstrapClient(c)
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, path, nil, wrapper, paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func bankAccountsCmd() *cli.Command {
 			{
 				Name:   "list",
 				Usage:  "List bank accounts",
-				Flags:  []cli.Flag{&cli.StringFlag{Name: "view", Usage: "API view filter"}},
+				Flags:  withPagination(&cli.StringFlag{Name: "view", Usage: "API view filter"}),
 				Action: bankAccountsList,
 			},
 			{
@@ -59,13 +59,13 @@ func bankTransactionsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List bank transactions",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (for example: unexplained)"},
-				},
+				),
 				Action: bankTransactionsList,
 			},
 		},
@@ -80,12 +80,12 @@ func bankExplanationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List bank transaction explanations",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				},
+				),
 				Action: bankExplanationsList,
 			},
 			{
@@ -107,10 +107,7 @@ func bankAccountsList(c *cli.Context) error {
 		return err
 	}
 
-	query := buildQueryParams(map[string]string{"view": c.String("view")})
-	path := appendQuery("/bank_accounts", query)
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/bank_accounts", map[string]string{"view": c.String("view")}, "bank_accounts", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -189,16 +186,14 @@ func bankTransactionsList(c *cli.Context) error {
 		return err
 	}
 
-	query := buildQueryParams(map[string]string{
+	params := map[string]string{
 		"bank_account":  acctURL,
 		"from_date":     c.String("from"),
 		"to_date":       c.String("to"),
 		"updated_since": c.String("updated-since"),
 		"view":          c.String("view"),
-	})
-	path := appendQuery("/bank_transactions", query)
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	}
+	resp, err := listAll(context.Background(), client, "/bank_transactions", params, "bank_transactions", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -247,10 +242,7 @@ func bankExplanationsList(c *cli.Context) error {
 		"to_date":       c.String("to"),
 		"updated_since": c.String("updated-since"),
 	}
-
-	path := appendQuery("/bank_transaction_explanations", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/bank_transaction_explanations", params, "bank_transaction_explanations", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

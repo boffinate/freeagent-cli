@@ -21,7 +21,7 @@ func vatReturnsCommand() *cli.Command {
 		Name:  "vat-returns",
 		Usage: "VAT returns",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List VAT returns", Action: vatReturnsList},
+			{Name: "list", Usage: "List VAT returns", Flags: withPagination(), Action: vatReturnsList},
 			{
 				Name:  "get",
 				Usage: "Get a VAT return by period_ends_on (YYYY-MM-DD) or URL",
@@ -42,7 +42,7 @@ func corporationTaxReturnsCommand() *cli.Command {
 		Name:  "corporation-tax-returns",
 		Usage: "Corporation Tax returns",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List Corporation Tax returns", Action: corporationTaxReturnsList},
+			{Name: "list", Usage: "List Corporation Tax returns", Flags: withPagination(), Action: corporationTaxReturnsList},
 			{
 				Name:  "get",
 				Usage: "Get a Corporation Tax return by period_ends_on or URL",
@@ -91,7 +91,7 @@ func cisBandsCommand() *cli.Command {
 		Name:  "cis-bands",
 		Usage: "CIS bands (reference data)",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List CIS bands", Action: cisBandsList},
+			{Name: "list", Usage: "List CIS bands", Flags: withPagination(), Action: cisBandsList},
 		},
 	}
 }
@@ -101,7 +101,7 @@ func salesTaxPeriodsCommand() *cli.Command {
 		Name:  "sales-tax-periods",
 		Usage: "Sales tax periods",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List sales tax periods", Action: salesTaxPeriodsList},
+			{Name: "list", Usage: "List sales tax periods", Flags: withPagination(), Action: salesTaxPeriodsList},
 			{
 				Name:  "get",
 				Usage: "Get a sales tax period by ID or URL",
@@ -122,7 +122,7 @@ func vatReturnsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/vat_returns", nil, "")
+	resp, err := listAll(context.Background(), client, "/vat_returns", nil, "vat_returns", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func corporationTaxReturnsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/corporation_tax_returns", nil, "")
+	resp, err := listAll(context.Background(), client, "/corporation_tax_returns", nil, "corporation_tax_returns", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func cisBandsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/cis_bands", nil, "")
+	resp, err := listAll(context.Background(), client, "/cis_bands", nil, "cis_bands", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func salesTaxPeriodsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/sales_tax_periods", nil, "")
+	resp, err := listAll(context.Background(), client, "/sales_tax_periods", nil, "sales_tax_periods", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

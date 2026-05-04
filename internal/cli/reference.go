@@ -25,7 +25,7 @@ func priceListItemsCommand() *cli.Command {
 		Name:  "price-list-items",
 		Usage: "Price list items",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List price list items", Action: priceListItemsList},
+			{Name: "list", Usage: "List price list items", Flags: withPagination(), Action: priceListItemsList},
 			{
 				Name:  "get",
 				Usage: "Get a price list item by ID or URL",
@@ -46,7 +46,7 @@ func stockItemsCommand() *cli.Command {
 		Name:  "stock-items",
 		Usage: "Stock items",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List stock items", Action: stockItemsList},
+			{Name: "list", Usage: "List stock items", Flags: withPagination(), Action: stockItemsList},
 			{
 				Name:  "get",
 				Usage: "Get a stock item by ID or URL",
@@ -109,7 +109,7 @@ func priceListItemsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/price_list_items", nil, "")
+	resp, err := listAll(context.Background(), client, "/price_list_items", nil, "price_list_items", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func stockItemsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/stock_items", nil, "")
+	resp, err := listAll(context.Background(), client, "/stock_items", nil, "stock_items", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

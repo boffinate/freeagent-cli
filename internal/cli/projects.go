@@ -18,11 +18,11 @@ func projectsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List projects",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (active, completed, cancelled, ...)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				},
+				),
 				Action: projectsList,
 			},
 			{
@@ -58,9 +58,7 @@ func projectsList(c *cli.Context) error {
 		params["contact"] = resolved
 	}
 
-	path := appendQuery("/projects", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/projects", params, "projects", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"text/tabwriter"
 
@@ -32,14 +31,14 @@ func invoiceListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List invoices",
-		Flags: []cli.Flag{
+		Flags: withPagination(
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: recent)"},
 			&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 			&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "status", Usage: "Invoice status"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-		},
+		),
 		Action: invoiceList,
 	}
 }
@@ -73,36 +72,22 @@ func invoiceList(c *cli.Context) error {
 		return err
 	}
 
-	query := url.Values{}
-	if v := c.String("view"); v != "" {
-		query.Set("view", v)
-	}
-	if v := c.String("status"); v != "" {
-		query.Set("status", v)
-	}
-	if v := c.String("from"); v != "" {
-		query.Set("from_date", v)
-	}
-	if v := c.String("to"); v != "" {
-		query.Set("to_date", v)
-	}
-	if v := c.String("updated-since"); v != "" {
-		query.Set("updated_since", v)
+	params := map[string]string{
+		"view":          c.String("view"),
+		"status":        c.String("status"),
+		"from_date":     c.String("from"),
+		"to_date":       c.String("to"),
+		"updated_since": c.String("updated-since"),
 	}
 	if v := c.String("contact"); v != "" {
 		resolved, err := normalizeResourceURL(profile.BaseURL, "contacts", v)
 		if err != nil {
 			return err
 		}
-		query.Set("contact", resolved)
+		params["contact"] = resolved
 	}
 
-	path := "/invoices"
-	if encoded := query.Encode(); encoded != "" {
-		path += "?" + encoded
-	}
-
-	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
+	resp, err := listAll(context.Background(), client, "/invoices", params, "invoices", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

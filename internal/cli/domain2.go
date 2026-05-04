@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/urfave/cli/v2"
 )
@@ -40,10 +39,10 @@ func notesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List notes filtered by contact or project",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
-				},
+				),
 				Action: notesList,
 			},
 			{
@@ -66,7 +65,7 @@ func emailAddressesCommand() *cli.Command {
 		Name:  "email-addresses",
 		Usage: "Verified sender email addresses",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List verified sender email addresses", Action: emailAddressesList},
+			{Name: "list", Usage: "List verified sender email addresses", Flags: withPagination(), Action: emailAddressesList},
 		},
 	}
 }
@@ -79,12 +78,12 @@ func journalSetsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List journal sets",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "from", Usage: "Start date YYYY-MM-DD"},
 					&cli.StringFlag{Name: "to", Usage: "End date YYYY-MM-DD"},
 					&cli.StringFlag{Name: "tag", Usage: "Filter by tag"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since timestamp"},
-				},
+				),
 				Action: journalSetsList,
 			},
 			{
@@ -112,7 +111,7 @@ func accountLocksCommand() *cli.Command {
 		Name:  "account-locks",
 		Usage: "Account locks",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List account locks", Action: accountLocksList},
+			{Name: "list", Usage: "List account locks", Flags: withPagination(), Action: accountLocksList},
 		},
 	}
 	cmd.Subcommands = append(cmd.Subcommands, accountLocksWriteSubcommands()...)
@@ -124,7 +123,7 @@ func finalAccountsReportsCommand() *cli.Command {
 		Name:  "final-accounts-reports",
 		Usage: "Final Accounts reports",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List Final Accounts reports", Action: finalAccountsReportsList},
+			{Name: "list", Usage: "List Final Accounts reports", Flags: withPagination(), Action: finalAccountsReportsList},
 			{
 				Name:  "get",
 				Usage: "Get a Final Accounts report by period_ends_on or URL",
@@ -148,10 +147,10 @@ func recurringInvoicesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List recurring invoices",
-				Flags: []cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (draft, recent, ...)"},
-				},
+				),
 				Action: recurringInvoicesList,
 			},
 			{
@@ -188,26 +187,25 @@ func notesList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	q := url.Values{}
+	params := map[string]string{}
 	if v := c.String("contact"); v != "" {
 		resolved, err := normalizeResourceURL(profile.BaseURL, "contacts", v)
 		if err != nil {
 			return err
 		}
-		q.Set("contact", resolved)
+		params["contact"] = resolved
 	}
 	if v := c.String("project"); v != "" {
 		resolved, err := normalizeResourceURL(profile.BaseURL, "projects", v)
 		if err != nil {
 			return err
 		}
-		q.Set("project", resolved)
+		params["project"] = resolved
 	}
-	if q.Get("contact") == "" && q.Get("project") == "" {
+	if params["contact"] == "" && params["project"] == "" {
 		return fmt.Errorf("--contact or --project required")
 	}
-	path := appendQuery("/notes", q.Encode())
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/notes", params, "notes", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -237,7 +235,7 @@ func emailAddressesList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/email_addresses", nil, "")
+	resp, err := listAll(context.Background(), client, "/email_addresses", nil, "email_addresses", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -257,8 +255,7 @@ func journalSetsList(c *cli.Context) error {
 		"tag":           c.String("tag"),
 		"updated_since": c.String("updated-since"),
 	}
-	path := appendQuery("/journal_sets", buildQueryParams(params))
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/journal_sets", params, "journal_sets", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -298,7 +295,7 @@ func accountLocksList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/account_locks", nil, "")
+	resp, err := listAll(context.Background(), client, "/account_locks", nil, "account_locks", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -310,7 +307,7 @@ func finalAccountsReportsList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/final_accounts_reports", nil, "")
+	resp, err := listAll(context.Background(), client, "/final_accounts_reports", nil, "final_accounts_reports", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -340,19 +337,15 @@ func recurringInvoicesList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	q := url.Values{}
-	if v := c.String("view"); v != "" {
-		q.Set("view", v)
-	}
+	params := map[string]string{"view": c.String("view")}
 	if v := c.String("contact"); v != "" {
 		resolved, err := normalizeResourceURL(profile.BaseURL, "contacts", v)
 		if err != nil {
 			return err
 		}
-		q.Set("contact", resolved)
+		params["contact"] = resolved
 	}
-	path := appendQuery("/recurring_invoices", q.Encode())
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/recurring_invoices", params, "recurring_invoices", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
