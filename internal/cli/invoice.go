@@ -31,14 +31,14 @@ func invoiceListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List invoices",
-		Flags: append([]cli.Flag{
+		Flags: withPagination(
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: recent)"},
 			&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 			&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "status", Usage: "Invoice status"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-		}, paginationFlags()...),
+		),
 		Action: invoiceList,
 	}
 }

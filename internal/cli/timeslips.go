@@ -18,14 +18,14 @@ func timeslipsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List timeslips",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "user", Usage: "User ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
 					&cli.StringFlag{Name: "task", Usage: "Task ID or URL"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				}, paginationFlags()...),
+				),
 				Action: timeslipsList,
 			},
 			{

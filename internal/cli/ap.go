@@ -78,7 +78,7 @@ func apAccountManagersListCmd() *cli.Command {
 	return &cli.Command{
 		Name:   "list",
 		Usage:  "List account managers in the practice",
-		Flags:  paginationFlags(),
+		Flags:  withPagination(),
 		Action: apAccountManagersList,
 	}
 }
@@ -166,14 +166,14 @@ func apClientsListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List clients of the practice",
-		Flags: append([]cli.Flag{
+		Flags: withPagination(
 			&cli.StringFlag{Name: "view", Usage: "View filter: all|active|inactive|closed|practice|linked|copilot|demo"},
 			&cli.StringFlag{Name: "sort", Usage: "Sort field: created_at|updated_at (prefix - for descending)"},
 			&cli.StringFlag{Name: "from-date", Usage: "Filter by created_at >= date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "to-date", Usage: "Filter by created_at <= date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Filter by updated_since (RFC3339)"},
 			&cli.BoolFlag{Name: "minimal", Usage: "Use minimal_data=true response (allows --per-page up to 500)"},
-		}, paginationFlags()...),
+		),
 		Action: apClientsList,
 	}
 }

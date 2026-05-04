@@ -15,18 +15,18 @@ import (
 )
 
 // listAll auto-paginates a /v2 list endpoint, walking RFC 5988 Link rel="next"
-// until exhausted (or opts.MaxPages is reached). Pages are merged into a
-// single JSON object {"<wrapper>": [...]} so existing renderers don't need to
-// change. When the response is a single page (no rel="next") the upstream
-// bytes are returned verbatim, preserving any side fields beyond the wrapper.
+// until exhausted (or opts.MaxPages is reached). When the first response has
+// no rel="next" the upstream bytes are returned verbatim so single-page
+// responses preserve any side fields (meta, etc.) beyond the wrapper key.
+// Multi-page responses are merged into {"<wrapper>": [...]}; side fields
+// from page 2..N are dropped because they don't compose meaningfully across
+// pages.
 //
-// Single-page mode is selected by a non-zero opts.Page or opts.NoFollow; in
-// that case exactly one request is made and the response is returned as-is.
+// opts.Page or opts.NoFollow short-circuit to a single upstream request.
 //
-// Per the FreeAgent docs, default per_page is 25 and the API caps it at 100;
-// we default to 100 to minimise round-trips. Values above 100 are passed
-// through to the server (some endpoints — e.g. /clients with minimal_data —
-// allow more) and the server enforces its own limit.
+// Default per_page is 100 (the FreeAgent API cap for most endpoints); some
+// endpoints — e.g. /clients with minimal_data — allow higher values, which
+// callers can pass via --per-page and the server enforces its own ceiling.
 func listAll(ctx context.Context, client *freeagent.Client, basePath string, params map[string]string, wrapper string, opts paginateOpts) ([]byte, error) {
 	perPage := opts.PerPage
 	if perPage <= 0 {
@@ -45,15 +45,25 @@ func listAll(ctx context.Context, client *freeagent.Client, basePath string, par
 	}
 	firstURL := appendQuery(basePath, buildQueryParams(merged))
 
-	if opts.Page > 0 || opts.NoFollow {
-		resp, _, _, err := client.Do(ctx, http.MethodGet, firstURL, nil, "")
+	resp, _, headers, err := client.Do(ctx, http.MethodGet, firstURL, nil, "")
+	if err != nil {
 		return resp, err
 	}
+	nextURL := nextLinkURL(headers)
+	if opts.Page > 0 || opts.NoFollow || nextURL == "" {
+		return resp, nil
+	}
 
-	var items []any
-	pages := 0
-	nextURL := firstURL
-	var firstResp []byte
+	if wrapper == "" {
+		return nil, fmt.Errorf("listAll: wrapper required for multi-page response from %s", basePath)
+	}
+	var first map[string]any
+	if err := json.Unmarshal(resp, &first); err != nil {
+		return nil, fmt.Errorf("listAll: decode page 1: %w", err)
+	}
+	items, _ := first[wrapper].([]any)
+	pages := 1
+
 	for nextURL != "" {
 		if pages >= maxPages {
 			fmt.Fprintf(os.Stderr,
@@ -63,38 +73,19 @@ func listAll(ctx context.Context, client *freeagent.Client, basePath string, par
 		}
 		resp, _, headers, err := client.Do(ctx, http.MethodGet, nextURL, nil, "")
 		if err != nil {
-			return resp, err
+			return nil, err
 		}
 		pages++
-
-		next := nextLinkURL(headers)
-		if pages == 1 {
-			firstResp = resp
-			if next == "" {
-				return resp, nil
-			}
-		}
-
-		if wrapper == "" {
-			return resp, fmt.Errorf("listAll: wrapper required for multi-page response")
-		}
 		var decoded map[string]any
 		if err := json.Unmarshal(resp, &decoded); err != nil {
-			if pages == 1 {
-				return resp, nil
-			}
 			return nil, fmt.Errorf("listAll: decode page %d: %w", pages, err)
 		}
 		page, _ := decoded[wrapper].([]any)
 		items = append(items, page...)
-		nextURL = next
+		nextURL = nextLinkURL(headers)
 	}
 
-	if pages <= 1 {
-		return firstResp, nil
-	}
-	out := map[string]any{wrapper: items}
-	return json.Marshal(out)
+	return json.Marshal(map[string]any{wrapper: items})
 }
 
 type paginateOpts struct {
@@ -134,6 +125,12 @@ func paginationFlags() []cli.Flag {
 		&cli.IntFlag{Name: "max-pages", Usage: "Cap on auto-pagination (default 50)"},
 		&cli.BoolFlag{Name: "no-paginate", Usage: "Disable auto-pagination (return only the first page)"},
 	}
+}
+
+// withPagination returns the command-specific flags concatenated with the
+// standard pagination flag set. Use it for every list command's Flags field.
+func withPagination(extra ...cli.Flag) []cli.Flag {
+	return append(extra, paginationFlags()...)
 }
 
 // paginationOptsFrom reads the flags installed by paginationFlags from a

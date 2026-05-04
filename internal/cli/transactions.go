@@ -21,11 +21,11 @@ func transactionsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List accounting transactions",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "from-date", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to-date", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "nominal-code", Usage: "Filter by nominal code"},
-				}, paginationFlags()...),
+				),
 				Action: transactionsList,
 			},
 			{

@@ -32,12 +32,12 @@ func contactsListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List contacts",
-		Flags: append([]cli.Flag{
+		Flags: withPagination(
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: active)"},
 			&cli.StringFlag{Name: "sort", Usage: "API sort field"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "query", Usage: "Local name/email filter"},
-		}, paginationFlags()...),
+		),
 		Action: contactsList,
 	}
 }
@@ -46,12 +46,12 @@ func contactsSearchCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "search",
 		Usage: "Search contacts by name or email",
-		Flags: append([]cli.Flag{
+		Flags: withPagination(
 			&cli.StringFlag{Name: "query", Usage: "Name or email to match"},
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: active)"},
 			&cli.StringFlag{Name: "sort", Usage: "API sort field"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-		}, paginationFlags()...),
+		),
 		Action: contactsSearch,
 	}
 }

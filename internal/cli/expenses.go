@@ -18,7 +18,7 @@ func expensesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List expenses",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "user", Usage: "User ID or URL"},
 					&cli.StringFlag{Name: "category", Usage: "Category ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
@@ -26,7 +26,7 @@ func expensesCommand() *cli.Command {
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter"},
-				}, paginationFlags()...),
+				),
 				Action: expensesList,
 			},
 			{

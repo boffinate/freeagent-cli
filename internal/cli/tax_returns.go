@@ -21,7 +21,7 @@ func vatReturnsCommand() *cli.Command {
 		Name:  "vat-returns",
 		Usage: "VAT returns",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List VAT returns", Flags: paginationFlags(), Action: vatReturnsList},
+			{Name: "list", Usage: "List VAT returns", Flags: withPagination(), Action: vatReturnsList},
 			{
 				Name:  "get",
 				Usage: "Get a VAT return by period_ends_on (YYYY-MM-DD) or URL",
@@ -42,7 +42,7 @@ func corporationTaxReturnsCommand() *cli.Command {
 		Name:  "corporation-tax-returns",
 		Usage: "Corporation Tax returns",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List Corporation Tax returns", Flags: paginationFlags(), Action: corporationTaxReturnsList},
+			{Name: "list", Usage: "List Corporation Tax returns", Flags: withPagination(), Action: corporationTaxReturnsList},
 			{
 				Name:  "get",
 				Usage: "Get a Corporation Tax return by period_ends_on or URL",
@@ -91,7 +91,7 @@ func cisBandsCommand() *cli.Command {
 		Name:  "cis-bands",
 		Usage: "CIS bands (reference data)",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List CIS bands", Flags: paginationFlags(), Action: cisBandsList},
+			{Name: "list", Usage: "List CIS bands", Flags: withPagination(), Action: cisBandsList},
 		},
 	}
 }
@@ -101,7 +101,7 @@ func salesTaxPeriodsCommand() *cli.Command {
 		Name:  "sales-tax-periods",
 		Usage: "Sales tax periods",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List sales tax periods", Flags: paginationFlags(), Action: salesTaxPeriodsList},
+			{Name: "list", Usage: "List sales tax periods", Flags: withPagination(), Action: salesTaxPeriodsList},
 			{
 				Name:  "get",
 				Usage: "Get a sales tax period by ID or URL",

@@ -21,10 +21,10 @@ func capitalAssetsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List capital assets",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "view", Usage: "API view filter"},
 					&cli.BoolFlag{Name: "include-history", Usage: "Include capital asset history"},
-				}, paginationFlags()...),
+				),
 				Action: capitalAssetsList,
 			},
 			{
@@ -45,7 +45,7 @@ func capitalAssetTypesCommand() *cli.Command {
 		Name:  "capital-asset-types",
 		Usage: "Capital asset types",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List capital asset types", Flags: paginationFlags(), Action: capitalAssetTypesList},
+			{Name: "list", Usage: "List capital asset types", Flags: withPagination(), Action: capitalAssetTypesList},
 			{
 				Name:  "get",
 				Usage: "Get a capital asset type by ID or URL",
@@ -66,7 +66,7 @@ func hirePurchasesCommand() *cli.Command {
 		Name:  "hire-purchases",
 		Usage: "Hire purchases",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List hire purchases", Flags: paginationFlags(), Action: hirePurchasesList},
+			{Name: "list", Usage: "List hire purchases", Flags: withPagination(), Action: hirePurchasesList},
 			{
 				Name:  "get",
 				Usage: "Get a hire purchase by ID or URL",
@@ -85,7 +85,7 @@ func propertiesCommand() *cli.Command {
 		Name:  "properties",
 		Usage: "Properties (rental income)",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List properties", Flags: paginationFlags(), Action: propertiesList},
+			{Name: "list", Usage: "List properties", Flags: withPagination(), Action: propertiesList},
 			{
 				Name:  "get",
 				Usage: "Get a property by ID or URL",

@@ -35,7 +35,7 @@ func bankAccountsCmd() *cli.Command {
 			{
 				Name:   "list",
 				Usage:  "List bank accounts",
-				Flags:  append([]cli.Flag{&cli.StringFlag{Name: "view", Usage: "API view filter"}}, paginationFlags()...),
+				Flags:  withPagination(&cli.StringFlag{Name: "view", Usage: "API view filter"}),
 				Action: bankAccountsList,
 			},
 			{
@@ -59,13 +59,13 @@ func bankTransactionsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List bank transactions",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (for example: unexplained)"},
-				}, paginationFlags()...),
+				),
 				Action: bankTransactionsList,
 			},
 		},
@@ -80,12 +80,12 @@ func bankExplanationsCmd() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List bank transaction explanations",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "bank-account", Usage: "Bank account ID or URL (required)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				}, paginationFlags()...),
+				),
 				Action: bankExplanationsList,
 			},
 			{

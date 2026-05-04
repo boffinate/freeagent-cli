@@ -25,7 +25,7 @@ func priceListItemsCommand() *cli.Command {
 		Name:  "price-list-items",
 		Usage: "Price list items",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List price list items", Flags: paginationFlags(), Action: priceListItemsList},
+			{Name: "list", Usage: "List price list items", Flags: withPagination(), Action: priceListItemsList},
 			{
 				Name:  "get",
 				Usage: "Get a price list item by ID or URL",
@@ -46,7 +46,7 @@ func stockItemsCommand() *cli.Command {
 		Name:  "stock-items",
 		Usage: "Stock items",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List stock items", Flags: paginationFlags(), Action: stockItemsList},
+			{Name: "list", Usage: "List stock items", Flags: withPagination(), Action: stockItemsList},
 			{
 				Name:  "get",
 				Usage: "Get a stock item by ID or URL",

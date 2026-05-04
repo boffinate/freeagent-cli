@@ -39,10 +39,10 @@ func notesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List notes filtered by contact or project",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
-				}, paginationFlags()...),
+				),
 				Action: notesList,
 			},
 			{
@@ -65,7 +65,7 @@ func emailAddressesCommand() *cli.Command {
 		Name:  "email-addresses",
 		Usage: "Verified sender email addresses",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List verified sender email addresses", Flags: paginationFlags(), Action: emailAddressesList},
+			{Name: "list", Usage: "List verified sender email addresses", Flags: withPagination(), Action: emailAddressesList},
 		},
 	}
 }
@@ -78,12 +78,12 @@ func journalSetsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List journal sets",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "from", Usage: "Start date YYYY-MM-DD"},
 					&cli.StringFlag{Name: "to", Usage: "End date YYYY-MM-DD"},
 					&cli.StringFlag{Name: "tag", Usage: "Filter by tag"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since timestamp"},
-				}, paginationFlags()...),
+				),
 				Action: journalSetsList,
 			},
 			{
@@ -111,7 +111,7 @@ func accountLocksCommand() *cli.Command {
 		Name:  "account-locks",
 		Usage: "Account locks",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List account locks", Flags: paginationFlags(), Action: accountLocksList},
+			{Name: "list", Usage: "List account locks", Flags: withPagination(), Action: accountLocksList},
 		},
 	}
 	cmd.Subcommands = append(cmd.Subcommands, accountLocksWriteSubcommands()...)
@@ -123,7 +123,7 @@ func finalAccountsReportsCommand() *cli.Command {
 		Name:  "final-accounts-reports",
 		Usage: "Final Accounts reports",
 		Subcommands: []*cli.Command{
-			{Name: "list", Usage: "List Final Accounts reports", Flags: paginationFlags(), Action: finalAccountsReportsList},
+			{Name: "list", Usage: "List Final Accounts reports", Flags: withPagination(), Action: finalAccountsReportsList},
 			{
 				Name:  "get",
 				Usage: "Get a Final Accounts report by period_ends_on or URL",
@@ -147,10 +147,10 @@ func recurringInvoicesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List recurring invoices",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (draft, recent, ...)"},
-				}, paginationFlags()...),
+				),
 				Action: recurringInvoicesList,
 			},
 			{

@@ -18,13 +18,13 @@ func billsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List bills",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter (open, recent, ...)"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				}, paginationFlags()...),
+				),
 				Action: billsList,
 			},
 			{

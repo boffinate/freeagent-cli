@@ -18,11 +18,11 @@ func creditNotesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List credit notes",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "contact", Usage: "Contact ID or URL"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				}, paginationFlags()...),
+				),
 				Action: creditNotesList,
 			},
 			{

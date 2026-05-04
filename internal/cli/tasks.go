@@ -18,9 +18,9 @@ func tasksCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List tasks",
-				Flags: append([]cli.Flag{
+				Flags: withPagination(
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
-				}, paginationFlags()...),
+				),
 				Action: tasksList,
 			},
 			{
