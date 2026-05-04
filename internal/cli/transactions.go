@@ -21,11 +21,11 @@ func transactionsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List accounting transactions",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					&cli.StringFlag{Name: "from-date", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to-date", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "nominal-code", Usage: "Filter by nominal code"},
-				},
+				}, paginationFlags()...),
 				Action: transactionsList,
 			},
 			{
@@ -52,9 +52,7 @@ func transactionsList(c *cli.Context) error {
 		"to_date":      c.String("to-date"),
 		"nominal_code": c.String("nominal-code"),
 	}
-	path := appendQuery("/accounting/transactions", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/accounting/transactions", params, "transactions", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

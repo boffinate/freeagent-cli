@@ -112,6 +112,13 @@ Manual flow:
 
 ## Usage
 
+> **Pagination.** Every `list` command auto-paginates by default — the CLI
+> walks the FreeAgent API's `Link` header and merges all pages into one
+> response. Auto-pagination is bounded at 50 pages by default; if you hit
+> the cap you'll see a stderr warning. Override with `--per-page`,
+> `--page`, `--max-pages`, or disable with `--no-paginate`. See
+> [`docs/usage.md`](docs/usage.md#pagination) for details.
+
 Create a draft invoice:
 
 ```bash

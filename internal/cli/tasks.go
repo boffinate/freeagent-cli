@@ -18,9 +18,9 @@ func tasksCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List tasks",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
-				},
+				}, paginationFlags()...),
 				Action: tasksList,
 			},
 			{
@@ -51,9 +51,7 @@ func tasksList(c *cli.Context) error {
 		}
 		params["project"] = resolved
 	}
-	path := appendQuery("/tasks", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/tasks", params, "tasks", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

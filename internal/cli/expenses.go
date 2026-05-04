@@ -18,7 +18,7 @@ func expensesCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List expenses",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					&cli.StringFlag{Name: "user", Usage: "User ID or URL"},
 					&cli.StringFlag{Name: "category", Usage: "Category ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
@@ -26,7 +26,7 @@ func expensesCommand() *cli.Command {
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "view", Usage: "API view filter"},
-				},
+				}, paginationFlags()...),
 				Action: expensesList,
 			},
 			{
@@ -67,9 +67,7 @@ func expensesList(c *cli.Context) error {
 		}
 	}
 
-	path := appendQuery("/expenses", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/expenses", params, "expenses", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,148 @@
+package cli
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"maps"
+	"net/http"
+	"os"
+	"regexp"
+	"strconv"
+
+	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/urfave/cli/v2"
+)
+
+// listAll auto-paginates a /v2 list endpoint, walking RFC 5988 Link rel="next"
+// until exhausted (or opts.MaxPages is reached). Pages are merged into a
+// single JSON object {"<wrapper>": [...]} so existing renderers don't need to
+// change. When the response is a single page (no rel="next") the upstream
+// bytes are returned verbatim, preserving any side fields beyond the wrapper.
+//
+// Single-page mode is selected by a non-zero opts.Page or opts.NoFollow; in
+// that case exactly one request is made and the response is returned as-is.
+//
+// Per the FreeAgent docs, default per_page is 25 and the API caps it at 100;
+// we default to 100 to minimise round-trips. Values above 100 are passed
+// through to the server (some endpoints — e.g. /clients with minimal_data —
+// allow more) and the server enforces its own limit.
+func listAll(ctx context.Context, client *freeagent.Client, basePath string, params map[string]string, wrapper string, opts paginateOpts) ([]byte, error) {
+	perPage := opts.PerPage
+	if perPage <= 0 {
+		perPage = defaultPerPage
+	}
+	maxPages := opts.MaxPages
+	if maxPages <= 0 {
+		maxPages = defaultMaxPages
+	}
+
+	merged := make(map[string]string, len(params)+2)
+	maps.Copy(merged, params)
+	merged["per_page"] = strconv.Itoa(perPage)
+	if opts.Page > 0 {
+		merged["page"] = strconv.Itoa(opts.Page)
+	}
+	firstURL := appendQuery(basePath, buildQueryParams(merged))
+
+	if opts.Page > 0 || opts.NoFollow {
+		resp, _, _, err := client.Do(ctx, http.MethodGet, firstURL, nil, "")
+		return resp, err
+	}
+
+	var items []any
+	pages := 0
+	nextURL := firstURL
+	var firstResp []byte
+	for nextURL != "" {
+		if pages >= maxPages {
+			fmt.Fprintf(os.Stderr,
+				"warning: %s: reached --max-pages=%d before exhausting results; output is truncated. Narrow filters or pass --max-pages.\n",
+				basePath, maxPages)
+			break
+		}
+		resp, _, headers, err := client.Do(ctx, http.MethodGet, nextURL, nil, "")
+		if err != nil {
+			return resp, err
+		}
+		pages++
+
+		next := nextLinkURL(headers)
+		if pages == 1 {
+			firstResp = resp
+			if next == "" {
+				return resp, nil
+			}
+		}
+
+		if wrapper == "" {
+			return resp, fmt.Errorf("listAll: wrapper required for multi-page response")
+		}
+		var decoded map[string]any
+		if err := json.Unmarshal(resp, &decoded); err != nil {
+			if pages == 1 {
+				return resp, nil
+			}
+			return nil, fmt.Errorf("listAll: decode page %d: %w", pages, err)
+		}
+		page, _ := decoded[wrapper].([]any)
+		items = append(items, page...)
+		nextURL = next
+	}
+
+	if pages <= 1 {
+		return firstResp, nil
+	}
+	out := map[string]any{wrapper: items}
+	return json.Marshal(out)
+}
+
+type paginateOpts struct {
+	PerPage  int
+	Page     int
+	MaxPages int
+	NoFollow bool
+}
+
+const (
+	defaultPerPage  = 100
+	defaultMaxPages = 50
+)
+
+var nextLinkRE = regexp.MustCompile(`<([^>]+)>\s*;\s*rel="next"`)
+
+// nextLinkURL extracts the rel="next" target from an RFC 5988 Link header.
+// Returns "" when the header is absent or has no next link.
+func nextLinkURL(h http.Header) string {
+	link := h.Get("Link")
+	if link == "" {
+		return ""
+	}
+	m := nextLinkRE.FindStringSubmatch(link)
+	if len(m) < 2 {
+		return ""
+	}
+	return m[1]
+}
+
+// paginationFlags is the standard flag set added to every list command. The
+// CLI auto-paginates by default; these flags exist only as opt-outs.
+func paginationFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.IntFlag{Name: "per-page", Usage: "Items per page when paginating (default 100, server cap)"},
+		&cli.IntFlag{Name: "page", Usage: "Fetch a single page instead of auto-paginating"},
+		&cli.IntFlag{Name: "max-pages", Usage: "Cap on auto-pagination (default 50)"},
+		&cli.BoolFlag{Name: "no-paginate", Usage: "Disable auto-pagination (return only the first page)"},
+	}
+}
+
+// paginationOptsFrom reads the flags installed by paginationFlags from a
+// urfave/cli context.
+func paginationOptsFrom(c *cli.Context) paginateOpts {
+	return paginateOpts{
+		PerPage:  c.Int("per-page"),
+		Page:     c.Int("page"),
+		MaxPages: c.Int("max-pages"),
+		NoFollow: c.Bool("no-paginate"),
+	}
+}

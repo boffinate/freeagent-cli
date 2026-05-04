@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -33,12 +32,12 @@ func contactsListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List contacts",
-		Flags: []cli.Flag{
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: active)"},
 			&cli.StringFlag{Name: "sort", Usage: "API sort field"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "query", Usage: "Local name/email filter"},
-		},
+		}, paginationFlags()...),
 		Action: contactsList,
 	}
 }
@@ -47,12 +46,12 @@ func contactsSearchCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "search",
 		Usage: "Search contacts by name or email",
-		Flags: []cli.Flag{
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{Name: "query", Usage: "Name or email to match"},
 			&cli.StringFlag{Name: "view", Usage: "API view filter (for example: active)"},
 			&cli.StringFlag{Name: "sort", Usage: "API sort field"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-		},
+		}, paginationFlags()...),
 		Action: contactsSearch,
 	}
 }
@@ -98,12 +97,7 @@ func contactsListWithQuery(c *cli.Context, query string, requireQuery bool) erro
 		return err
 	}
 
-	path := "/contacts"
-	if queryParams := buildContactsQuery(c); queryParams != "" {
-		path += "?" + queryParams
-	}
-
-	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
+	resp, err := listAll(context.Background(), client, "/contacts", buildContactsParams(c), "contacts", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -152,18 +146,12 @@ func contactsListWithQuery(c *cli.Context, query string, requireQuery bool) erro
 	return nil
 }
 
-func buildContactsQuery(c *cli.Context) string {
-	query := url.Values{}
-	if v := c.String("view"); v != "" {
-		query.Set("view", v)
+func buildContactsParams(c *cli.Context) map[string]string {
+	return map[string]string{
+		"view":          c.String("view"),
+		"sort":          c.String("sort"),
+		"updated_since": c.String("updated-since"),
 	}
-	if v := c.String("sort"); v != "" {
-		query.Set("sort", v)
-	}
-	if v := c.String("updated-since"); v != "" {
-		query.Set("updated_since", v)
-	}
-	return query.Encode()
 }
 
 func contactsGet(c *cli.Context) error {

@@ -199,8 +199,10 @@ func TestAPClientsList_Success(t *testing.T) {
 	if gotPath != "/v2/clients" {
 		t.Errorf("path = %q, want /v2/clients", gotPath)
 	}
-	if gotQuery != "" {
-		t.Errorf("query = %q, want empty", gotQuery)
+	// Auto-paginate adds per_page=100 by default; nothing else should be in
+	// the query when no filter flags were passed.
+	if gotQuery != "per_page=100" {
+		t.Errorf("query = %q, want %q", gotQuery, "per_page=100")
 	}
 	for _, want := range []string{"Acme Ltd", "acme", "Globex", "Subdomain", "Account Manager"} {
 		if !strings.Contains(out, want) {

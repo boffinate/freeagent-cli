@@ -78,6 +78,7 @@ func apAccountManagersListCmd() *cli.Command {
 	return &cli.Command{
 		Name:   "list",
 		Usage:  "List account managers in the practice",
+		Flags:  paginationFlags(),
 		Action: apAccountManagersList,
 	}
 }
@@ -87,7 +88,7 @@ func apAccountManagersList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), http.MethodGet, "/account_managers", nil, "")
+	resp, err := listAll(context.Background(), client, "/account_managers", nil, "account_managers", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
@@ -165,16 +166,14 @@ func apClientsListCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "list",
 		Usage: "List clients of the practice",
-		Flags: []cli.Flag{
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{Name: "view", Usage: "View filter: all|active|inactive|closed|practice|linked|copilot|demo"},
 			&cli.StringFlag{Name: "sort", Usage: "Sort field: created_at|updated_at (prefix - for descending)"},
 			&cli.StringFlag{Name: "from-date", Usage: "Filter by created_at >= date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "to-date", Usage: "Filter by created_at <= date (YYYY-MM-DD)"},
 			&cli.StringFlag{Name: "updated-since", Usage: "Filter by updated_since (RFC3339)"},
 			&cli.BoolFlag{Name: "minimal", Usage: "Use minimal_data=true response (allows --per-page up to 500)"},
-			&cli.IntFlag{Name: "per-page", Usage: "Items per page"},
-			&cli.IntFlag{Name: "page", Usage: "Page number"},
-		},
+		}, paginationFlags()...),
 		Action: apClientsList,
 	}
 }
@@ -195,16 +194,8 @@ func apClientsList(c *cli.Context) error {
 	if c.Bool("minimal") {
 		params["minimal_data"] = "true"
 	}
-	if v := c.Int("per-page"); v > 0 {
-		params["per_page"] = fmt.Sprintf("%d", v)
-	}
-	if v := c.Int("page"); v > 0 {
-		params["page"] = fmt.Sprintf("%d", v)
-	}
 
-	path := appendQuery("/clients", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), http.MethodGet, path, nil, "")
+	resp, err := listAll(context.Background(), client, "/clients", params, "clients", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

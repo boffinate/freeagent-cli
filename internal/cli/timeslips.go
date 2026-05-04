@@ -18,14 +18,14 @@ func timeslipsCommand() *cli.Command {
 			{
 				Name:  "list",
 				Usage: "List timeslips",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					&cli.StringFlag{Name: "user", Usage: "User ID or URL"},
 					&cli.StringFlag{Name: "project", Usage: "Project ID or URL"},
 					&cli.StringFlag{Name: "task", Usage: "Task ID or URL"},
 					&cli.StringFlag{Name: "from", Usage: "Start date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "to", Usage: "End date (YYYY-MM-DD)"},
 					&cli.StringFlag{Name: "updated-since", Usage: "Updated since (YYYY-MM-DD)"},
-				},
+				}, paginationFlags()...),
 				Action: timeslipsList,
 			},
 			{
@@ -70,9 +70,7 @@ func timeslipsList(c *cli.Context) error {
 		return fmt.Errorf("provide --from/--to or --updated-since")
 	}
 
-	path := appendQuery("/timeslips", buildQueryParams(params))
-
-	resp, _, _, err := client.Do(context.Background(), "GET", path, nil, "")
+	resp, err := listAll(context.Background(), client, "/timeslips", params, "timeslips", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}
