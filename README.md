@@ -6,7 +6,10 @@ A small CLI for the FreeAgent API, built in Go.
 
 - OAuth login (local callback or manual paste)
 - Keychain-backed token storage with file fallback
-- Create and send invoices
+- Read and write wrappers for common FreeAgent domains: invoices, contacts,
+  bills, expenses, projects, tasks, timeslips, estimates, credit notes,
+  bank data, tax returns, journal sets, notes, attachments, account locks,
+  reports, and reference data
 - Break-glass `raw` command for any FreeAgent endpoint
 - JSON output mode for scripting / agents
 - Read-only build for AI / scripting use (see "Safety model" below)
@@ -26,10 +29,18 @@ This repo produces **two binaries** from one source tree:
 
 Two independent safety layers are enforced in CI:
 
-1. **Command-tree exclusion** via Go build tags. `freeagent-ro` does not register `bank`, `raw`, `contacts create`, `invoices create`, `invoices send`, or `invoices delete`.
+1. **Command-tree exclusion** via Go build tags. `freeagent-ro` registers
+   read-only commands only. It does not register `raw`, `bank approve`, or
+   write subcommands such as `contacts create`, `invoices create`,
+   `invoices send`, `invoices delete`, `bills create`, `expenses delete`,
+   `projects update`, `vat-returns transition`, and similar mutations.
 2. **HTTP-client guard**. Under `-tags readonly`, every request must satisfy all of:
    - https scheme (no plaintext HTTP — bearer tokens must not traverse unencrypted),
-   - host in `{api.freeagent.com, api.sandbox.freeagent.com}` (blocks bearer-token exfiltration via `--base-url` or server-returned absolute URLs),
+   - host in `{api.freeagent.com, api.sandbox.freeagent.com, api.github.com}`.
+     FreeAgent hosts are used for API/OAuth calls; `api.github.com` is used
+     only by `version --check`. This blocks bearer-token exfiltration via
+     `--base-url` or server-returned absolute URLs while still allowing the
+     explicit update check,
    - method is GET/HEAD, **or** POST to the exact path `/v2/token_endpoint` (OAuth flow).
 
    This catches the case where a future refactor adds a mutating call inside a read subcommand.
@@ -51,12 +62,16 @@ make build   # produces bin/freeagent
 ### Read-only binary
 
 ```bash
-git clone https://github.com/anjor/freeagent-cli.git
+git clone https://github.com/boffinate/freeagent-cli.git
 cd freeagent-cli
 make install-ro           # installs to $GOPATH/bin/freeagent-ro
 # or, to a custom location:
 PREFIX=/usr/local/bin make install-ro
 ```
+
+The Go module path is still `github.com/anjor/freeagent-cli`, so `go install`
+uses that import path. Tagged binary releases and update checks are published
+from `github.com/boffinate/freeagent-cli`.
 
 `make install-ro` runs the readonly test suite (command-tree assertion + HTTP-guard tests) before copying the binary, so a broken RO build cannot quietly land on disk.
 
@@ -192,10 +207,15 @@ Reference data (company, users, categories, price list, stock):
 ```bash
 ./freeagent company show
 ./freeagent users list
+./freeagent users get --id USER_ID
 ./freeagent users me
 ./freeagent categories list
 ./freeagent price-list-items list
+./freeagent price-list-items get --id PRICE_LIST_ITEM_ID
 ./freeagent stock-items list
+./freeagent stock-items get --id STOCK_ITEM_ID
+./freeagent email-addresses list
+./freeagent payroll-profiles list
 ```
 
 Projects, tasks, timeslips, estimates:
@@ -204,8 +224,11 @@ Projects, tasks, timeslips, estimates:
 ./freeagent projects list --view active
 ./freeagent projects get --id PROJECT_ID
 ./freeagent tasks list --project PROJECT_ID
+./freeagent tasks get --id TASK_ID
 ./freeagent timeslips list --from 2026-01-01 --to 2026-01-31 --user USER_ID
+./freeagent timeslips get --id TIMESLIP_ID
 ./freeagent estimates list --contact CONTACT_ID
+./freeagent estimates get --id ESTIMATE_ID
 ```
 
 Accountancy Practice (read):
@@ -246,7 +269,31 @@ Bills, expenses, credit notes (read):
 ./freeagent bills list --from 2026-01-01 --to 2026-03-31
 ./freeagent bills get --id BILL_ID
 ./freeagent expenses list --user USER_ID --from 2026-01-01
+./freeagent expenses get --id EXPENSE_ID
 ./freeagent credit-notes list --contact CONTACT_ID
+./freeagent credit-notes get --id CREDIT_NOTE_ID
+```
+
+Other read-only domains:
+
+```bash
+./freeagent account-locks list
+./freeagent attachments get --id ATTACHMENT_ID
+./freeagent capital-assets list
+./freeagent capital-assets get --id CAPITAL_ASSET_ID
+./freeagent capital-asset-types list
+./freeagent capital-asset-types get --id CAPITAL_ASSET_TYPE_ID
+./freeagent hire-purchases list
+./freeagent hire-purchases get --id HIRE_PURCHASE_ID
+./freeagent journal-sets list
+./freeagent journal-sets get --id JOURNAL_SET_ID
+./freeagent journal-sets opening-balances
+./freeagent notes list --contact CONTACT_ID
+./freeagent notes get --id NOTE_ID
+./freeagent properties list
+./freeagent properties get --id PROPERTY_ID
+./freeagent recurring-invoices list
+./freeagent recurring-invoices get --id RECURRING_INVOICE_ID
 ```
 
 Bills (write — full binary only):
@@ -308,6 +355,69 @@ Credit notes & estimates (write — full binary only):
 ./freeagent estimates transition --id EST_ID --name mark_as_approved
 ./freeagent estimates duplicate --id EST_ID
 ./freeagent estimates delete --id EST_ID --yes
+./freeagent estimates items create --estimate EST_ID \
+  --description "Design" --price 100 --item-type Services
+./freeagent estimates items update --id ESTIMATE_ITEM_ID --price 120
+./freeagent estimates items delete --id ESTIMATE_ITEM_ID --yes
+```
+
+Other write commands (full binary only):
+
+```bash
+./freeagent account-locks set --body ./account-lock.json
+./freeagent account-locks delete --yes
+./freeagent attachments delete --id ATTACHMENT_ID --yes
+./freeagent capital-asset-types create --body ./capital-asset-type.json
+./freeagent capital-asset-types update --id TYPE_ID --body ./capital-asset-type-update.json
+./freeagent capital-asset-types delete --id TYPE_ID --yes
+./freeagent journal-sets create --body ./journal-set.json
+./freeagent journal-sets update --id JOURNAL_SET_ID --body ./journal-set-update.json
+./freeagent journal-sets delete --id JOURNAL_SET_ID --yes
+./freeagent notes create --body ./note.json
+./freeagent notes update --id NOTE_ID --body ./note-update.json
+./freeagent notes delete --id NOTE_ID --yes
+./freeagent payroll payment-transition \
+  --year 2026 --payment-date 2026-04-30 --name mark_as_paid
+./freeagent price-list-items create --body ./price-list-item.json
+./freeagent price-list-items update --id ITEM_ID --body ./price-list-item-update.json
+./freeagent price-list-items delete --id ITEM_ID --yes
+./freeagent properties create --body ./property.json
+./freeagent properties update --id PROPERTY_ID --body ./property-update.json
+./freeagent properties delete --id PROPERTY_ID --yes
+./freeagent sales-tax-periods create --body ./sales-tax-period.json
+./freeagent sales-tax-periods update --id PERIOD_ID --body ./sales-tax-period-update.json
+./freeagent sales-tax-periods delete --id PERIOD_ID --yes
+```
+
+Tax and final accounts:
+
+```bash
+./freeagent vat-returns list
+./freeagent vat-returns get --period-ends-on 2026-03-31
+./freeagent vat-returns transition --period-ends-on 2026-03-31 --name mark_as_filed
+./freeagent vat-returns payment-transition \
+  --period-ends-on 2026-03-31 --payment-date 2026-04-07 --name mark_as_paid
+
+./freeagent corporation-tax-returns list
+./freeagent corporation-tax-returns get --period-ends-on 2026-03-31
+./freeagent corporation-tax-returns transition \
+  --period-ends-on 2026-03-31 --name mark_as_filed
+
+./freeagent self-assessment-returns list --user USER_ID
+./freeagent self-assessment-returns get --user USER_ID --period-ends-on 2026-04-05
+./freeagent self-assessment-returns transition \
+  --user USER_ID --period-ends-on 2026-04-05 --name mark_as_filed
+./freeagent self-assessment-returns payment-transition \
+  --user USER_ID --period-ends-on 2026-04-05 --payment-date 2026-07-31 --name mark_as_paid
+
+./freeagent final-accounts-reports list
+./freeagent final-accounts-reports get --period-ends-on 2026-03-31
+./freeagent final-accounts-reports transition \
+  --period-ends-on 2026-03-31 --name mark_as_filed
+
+./freeagent cis-bands list
+./freeagent sales-tax-periods list
+./freeagent sales-tax-periods get --id PERIOD_ID
 ```
 
 Accounting transactions (ledger entries — distinct from bank transactions):
