@@ -16,14 +16,15 @@ For exhaustive flag lists, run `freeagent <command> --help`.
 
 ## Pagination
 
-Every `list` command auto-paginates by default: the CLI walks the API's
-`Link` header (`rel="next"`) and merges all pages into one response. You
-get the full result set for the filters you passed, no manual paging.
+`list` commands that hit paginated collection endpoints auto-paginate by
+default: the CLI walks the API's `Link` header (`rel="next"`) and merges
+all pages into one response. You get the full result set for the filters
+you passed, no manual paging.
 
 To bound runaway fetches, auto-pagination stops at 50 pages by default and
 emits a warning to stderr asking you to narrow filters or raise `--max-pages`.
 
-Per-list flags (added to every `list` command):
+Per-list flags (added to paginated list commands):
 
 - `--per-page N` — items requested per page (default 100, the API maximum
   for most endpoints; some endpoints like `ap clients list --minimal` allow
@@ -31,6 +32,11 @@ Per-list flags (added to every `list` command):
 - `--page N` — fetch a single page at position N. Disables auto-pagination.
 - `--max-pages N` — cap on the auto-pagination walk (default 50).
 - `--no-paginate` — disable auto-pagination; return only the first page.
+
+A few list commands hit fixed-shape sub-resources rather than paginated
+collections and don't take these flags: `categories list` (returns four
+grouped wrappers), `payroll list` and `payroll-profiles list` (keyed by
+tax year), `self-assessment-returns list` (per-user sub-resource).
 
 ## Invoices
 

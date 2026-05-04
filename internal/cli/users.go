@@ -18,6 +18,7 @@ func usersCommand() *cli.Command {
 			{
 				Name:   "list",
 				Usage:  "List users",
+				Flags:  withPagination(),
 				Action: usersList,
 			},
 			{
@@ -43,7 +44,7 @@ func usersList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	resp, _, _, err := client.Do(context.Background(), "GET", "/users", nil, "")
+	resp, err := listAll(context.Background(), client, "/users", nil, "users", paginationOptsFrom(c))
 	if err != nil {
 		return err
 	}

@@ -112,12 +112,14 @@ Manual flow:
 
 ## Usage
 
-> **Pagination.** Every `list` command auto-paginates by default — the CLI
-> walks the FreeAgent API's `Link` header and merges all pages into one
-> response. Auto-pagination is bounded at 50 pages by default; if you hit
-> the cap you'll see a stderr warning. Override with `--per-page`,
-> `--page`, `--max-pages`, or disable with `--no-paginate`. See
-> [`docs/usage.md`](docs/usage.md#pagination) for details.
+> **Pagination.** `list` commands that hit paginated collection endpoints
+> auto-paginate by default — the CLI walks the FreeAgent API's `Link`
+> header and merges all pages into one response. Auto-pagination is
+> bounded at 50 pages by default; if you hit the cap you'll see a stderr
+> warning. Override with `--per-page`, `--page`, `--max-pages`, or disable
+> with `--no-paginate`. A few list commands hit fixed-shape sub-resources
+> (e.g. `payroll list`, `categories list`) and don't take these flags.
+> See [`docs/usage.md`](docs/usage.md#pagination) for details.
 
 Create a draft invoice:
 
