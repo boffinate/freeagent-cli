@@ -502,3 +502,7 @@ that Dependabot can't automate — live in [`RELEASING.md`](./RELEASING.md).
 ## License
 
 MIT. See `LICENSE`.
+
+## Credits
+
+OAuth, token storage, and HTTP client scaffolding originally from [`anjor/freeagent-cli`](https://github.com/anjor/freeagent-cli).
