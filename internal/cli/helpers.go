@@ -11,9 +11,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/anjor/freeagent-cli/internal/config"
-	"github.com/anjor/freeagent-cli/internal/freeagent"
-	"github.com/anjor/freeagent-cli/internal/storage"
+	"github.com/boffinate/freeagent-cli/internal/config"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/storage"
 )
 
 // newTokenStore produces the TokenStore used by newClient. Tests override this

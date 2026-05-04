@@ -50,7 +50,7 @@ Two independent safety layers are enforced in CI:
 ### Full (read + write) binary
 
 ```bash
-go install github.com/anjor/freeagent-cli/cmd/freeagent@latest
+go install github.com/boffinate/freeagent-cli/cmd/freeagent@latest
 ```
 
 Or build from source:
@@ -69,9 +69,8 @@ make install-ro           # installs to $GOPATH/bin/freeagent-ro
 PREFIX=/usr/local/bin make install-ro
 ```
 
-The Go module path is still `github.com/anjor/freeagent-cli`, so `go install`
-uses that import path. Tagged binary releases and update checks are published
-from `github.com/boffinate/freeagent-cli`.
+Tagged binary releases and update checks are published from
+`github.com/boffinate/freeagent-cli`.
 
 `make install-ro` runs the readonly test suite (command-tree assertion + HTTP-guard tests) before copying the binary, so a broken RO build cannot quietly land on disk.
 

@@ -1,4 +1,4 @@
-module github.com/anjor/freeagent-cli
+module github.com/boffinate/freeagent-cli
 
 go 1.26
 

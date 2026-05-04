@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
 )
 
 // TestE2E_Smoke_ReadonlyBuild proves that the e2e package compiles AND

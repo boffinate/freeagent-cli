@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/anjor/freeagent-cli/internal/cli"
+	"github.com/boffinate/freeagent-cli/internal/cli"
 )
 
 var Version = "dev"

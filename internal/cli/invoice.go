@@ -8,8 +8,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/anjor/freeagent-cli/internal/config"
-	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/config"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
 
 	"github.com/urfave/cli/v2"
 )

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
 )
 
 // TestReadonlyBlocksCrossHostRedirect exercises the RO CheckRedirect guard by

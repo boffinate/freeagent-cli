@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anjor/freeagent-cli/internal/config"
-	"github.com/anjor/freeagent-cli/internal/freeagent"
-	"github.com/anjor/freeagent-cli/internal/storage"
+	"github.com/boffinate/freeagent-cli/internal/config"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/storage"
 )
 
 const testBaseURL = "https://api.sandbox.freeagent.com/v2"

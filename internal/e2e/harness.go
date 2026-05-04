@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anjor/freeagent-cli/internal/freeagent"
-	"github.com/anjor/freeagent-cli/internal/storage"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/storage"
 )
 
 // Compile-time guard: singleFileStore must satisfy storage.TokenStore so

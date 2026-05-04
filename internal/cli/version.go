@@ -12,8 +12,8 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/mod/semver"
 
-	"github.com/anjor/freeagent-cli/internal/freeagent"
-	"github.com/anjor/freeagent-cli/internal/update"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/update"
 )
 
 // updateHTTPClient routes `version --check` through the build-tagged

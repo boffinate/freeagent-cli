@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anjor/freeagent-cli/internal/storage"
+	"github.com/boffinate/freeagent-cli/internal/storage"
 )
 
 type tripwireStore struct{ t *testing.T }

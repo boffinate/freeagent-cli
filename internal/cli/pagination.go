@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/anjor/freeagent-cli/internal/freeagent"
+	"github.com/boffinate/freeagent-cli/internal/freeagent"
 	"github.com/urfave/cli/v2"
 )
 

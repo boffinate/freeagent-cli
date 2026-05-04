@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anjor/freeagent-cli/internal/storage"
+	"github.com/boffinate/freeagent-cli/internal/storage"
 )
 
 const (

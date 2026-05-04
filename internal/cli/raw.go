@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/anjor/freeagent-cli/internal/config"
+	"github.com/boffinate/freeagent-cli/internal/config"
 
 	"github.com/urfave/cli/v2"
 )
